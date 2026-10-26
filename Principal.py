@@ -3,6 +3,7 @@
 from Buffer import Buffer
 from LexicalAnalyzer import LexicalAnalyzer
 from SymbolTable import SymbolTable
+from LexemeTable import LexemeTable
 
 if __name__ == '__main__':
 
@@ -10,6 +11,7 @@ if __name__ == '__main__':
     buffer = Buffer()
     analyzer = LexicalAnalyzer()
     symbol_table = SymbolTable()
+    lexeme_table = LexemeTable()
 
     # Lists for every list returned list from the function tokenize
     token = []
@@ -21,6 +23,7 @@ if __name__ == '__main__':
         token += t
         lexeme += lex
     
+    lexeme_table.display(token, lexeme)
 
     symbol_table.build(token, lexeme)
     symbol_table.display()
