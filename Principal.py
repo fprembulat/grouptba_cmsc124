@@ -1,5 +1,4 @@
 # THIS IS THE MAIN FILE
-
 from Buffer import Buffer
 from LexicalAnalyzer import LexicalAnalyzer
 from SymbolTable import SymbolTable
@@ -23,9 +22,7 @@ if __name__ == '__main__':
         token += t
         lexeme += lex
     
-    lexeme_table.display(token, lexeme)
-
-    symbol_table.build(token, lexeme)
-    symbol_table.display()
+    lexeme_table.build(token, lexeme)
+    print(symbol_table.build(token,lexeme))
 
 

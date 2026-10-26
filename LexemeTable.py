@@ -33,12 +33,9 @@ class LexemeTable:
             'ISNOWA': 'Typecasting Keyword'
         }
 
-    def display(self, token, lexeme):
-        print("\n Lexemes")
-
-        print("{:<20}{}".format("Lexeme", "Classification"))
-
+    def build(self, token, lexeme):
+        lexemes = []
         for i in range(len(token)):
             classification = self.classifications.get(token[i], "Keyword")
-
-            print("{:<20}{}".format(lexeme[i], classification))
+            lexemes.append(lexeme[i])
+        return lexemes

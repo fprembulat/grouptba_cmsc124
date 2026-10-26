@@ -1,8 +1,21 @@
 # file for syntax analyzer
 
-# HAI needs to end in KTHXBYE
+wazzup_counter = 0
+buhbye_counter = 0
+
+def syntax(lex):
+	while (lex[i] != 'KTHXBYE'):
+		# HAI needs to end in KTHXBYE
+		if (lex[-1] != 'KTHXBYE'):
+			return 'must end with KTHXBYE'
+		elif (lex[0] != 'HAI'):
+			return 'must start with HAI'
+		elif (lex[i] in ('WAZZUP', 'BUHBYE')):
+			vardec_helper()
 
 # WAZZUP needs to end in BUHBYE
+
+
 
 # OBTW needs to end in TLDR
 
