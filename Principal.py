@@ -22,7 +22,8 @@ if __name__ == '__main__':
         token += t
         lexeme += lex
     
-    lexeme_table.build(token, lexeme)
+    lex = lexeme_table.build(token, lexeme)
+    print(lex)
     print(symbol_table.build(token,lexeme))
 
 

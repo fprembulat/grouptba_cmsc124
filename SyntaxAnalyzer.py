@@ -2,6 +2,8 @@
 
 wazzup_counter = 0
 buhbye_counter = 0
+obtw_counter = 0
+tldr_counter = 0
 
 def syntax(lex):
 	while (lex[i] != 'KTHXBYE'):
@@ -11,15 +13,31 @@ def syntax(lex):
 		elif (lex[0] != 'HAI'):
 			return 'must start with HAI'
 		elif (lex[i] in ('WAZZUP', 'BUHBYE')):
-			vardec_helper()
+			vardec_helper(lex[i])
+		elif (lex[i] in ('OBTW', 'TLDR')):
+			comm_helper(lex[i])
+		elif (lex[i] == 'GIMMEH'):
+			input_helper(lex[i])
 
 # WAZZUP needs to end in BUHBYE
 
-
-
 # OBTW needs to end in TLDR
 
+def comm_helper(lex):			
+	if (lex[i] == 'OBTW'):
+		obtw_counter += 1
+	else:
+		tldr_counter += 1
+
+	if ((obtw_counter - tldr_counter) > 1):
+		return 'error: obtw must be closed with tldr'
+	elif ((obtw_counter - tldr_counter) < 0):
+		return 'error: tldr should be paired with a obtw'
+
 # GIMMEH needs to be followed with a variable
+
+def input_helper(lex):
+
 
 # ARITHMETIC OPERATIONS ----------------------------------------
 
