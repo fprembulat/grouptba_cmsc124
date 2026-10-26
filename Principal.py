@@ -1,26 +1,28 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# THIS IS THE MAIN FILE
 
 from Buffer import Buffer
 from LexicalAnalyzer import LexicalAnalyzer
+from SymbolTable import SymbolTable
 
 if __name__ == '__main__':
-    Buffer = Buffer()
-    Analyzer = LexicalAnalyzer()
+
+    # objects
+    buffer = Buffer()
+    analyzer = LexicalAnalyzer()
+    symbol_table = SymbolTable()
 
     # Lists for every list returned list from the function tokenize
     token = []
     lexeme = []
-    row = []
-    column = []
 
-    # Tokenize and reload of the buffer
-    for i in Buffer.load_buffer():
-        t, lex, lin, col = Analyzer.tokenize(i)
+    for code in buffer.load_buffer():
+        t, lex = analyzer.tokenize(code) # tokenize the code
+
         token += t
         lexeme += lex
-        row += lin
-        column += col
+    
 
-    print('\nRecognize Tokens: ', token)
+    symbol_table.build(token, lexeme)
+    symbol_table.display()
+
 

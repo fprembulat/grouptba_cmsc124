@@ -1,101 +1,154 @@
+# RECOGNIZES LEXEMES AND CLASSIFIES TOKENS
+
 import re
 
 class LexicalAnalyzer:
-    lin_num = 1
+    def __init__(self):
 
-    def tokenize(self, code):
-        rules = [
+        self.rules = [
             ('START', r'HAI'),
             ('END', r'KTHXBYE'),
+
             ('WAZZUP', r'WAZZUP'),
             ('BUHBYE', r'BUHBYE'),
-            ('BTW', r'BTW'),
-            ('OBTW', r'OBTW'),
-            ('TLDR', r'TLDR'),
-            ('VARDEC', r'I HAS A'),
-            ('ASSIGN', r'ITZ'),
-            ('R', r'R'),
-            ('SUM', r'SUM OF'),
-            ('DIFF', r'DIFF OF'),
-            ('PRODUKT', r'PRODUKT OF'),
-            ('MAEK', r'MAEK'),
-            ('A', r'A'),
-            ('ISNOWA', r'IS NOW A'),
-            ('PRINT', r'VISIBLE'),
-            ('GIMMEH', r'GIMMEH'),
+
+            ('OBTW', r'OBTW\b'),
+            ('TLDR', r'TLDR\b'),
+            ('BTW', r'BTW\b'),
+
+            ('VARDEC', r'I HAS A\b'),
+            ('ASSIGN', r'ITZ\b'),
+            ('ISNOWA', r'IS NOW A\b'),
+
+            ('QUOSHUNTOF', r'QUOSHUNT OF\b'),
+            ('PRODUKT', r'PRODUKT OF\b'),
+            ('SMALLR', r'SMALLR OF\b'),
+            ('BOTHSAEM', r'BOTH SAEM\b'),
+            ('DIFFRINT', r'DIFFRINT\b'),
+            ('SUM', r'SUM OF\b'),
+            ('DIFF', r'DIFF OF\b'),
+            ('MOD', r'MOD OF\b'),
+            ('BIGGR', r'BIGGR OF\b'),
+            ('EITHER', r'EITHER OF\b'),
+            ('NOTOF', r'NOT OF\b'),
+            ('WONOF', r'WON OF\b'),
+            ('ANYOF', r'ANY OF\b'),
+            ('ALLOF', r'ALL OF\b'),
+
             ('ORLY', r'O RLY\?'),
-            ('YARLY', r'YA RLY'),
-            ('MEBBE', r'MEBBE'),
-            ('NOWAI', r'NO WAI'),
-            ('OIC', r'OIC'),
+            ('YARLY', r'YA RLY\b'),
+            ('NOWAI', r'NO WAI\b'),
+            ('MEBBE', r'MEBBE\b'),
+            ('OIC', r'OIC\b'),
+
             ('WTF', r'WTF\?'),
-            ('OMG', r'OMG'),
-            ('OMGWTF', r'OMGWTF'),
-            ('QUOSHUNTOF', r'QUOSHUNT OF'),
-            ('MOD', r'MOD OF'),
-            ('BIGGR', r'BIGGR OF'),
-            ('SMALLR', r'SMALLR OF'),
-            ('EITHER', r'EITHER OF'),
-            ('NOTOF', r'NOT OF'),
-            ('WONOF', r'WON OF'),
-            ('ANYOF', r'ANY OF'),
-            ('ALLOF', r'ALL OF'),
-            ('IF', r'IF'),
-            ('BOTHSAEM', r'BOTH SAEM'),
-            ('DIFFRINT', r'DIFFRINT'),
-            ('SMOOSH', r'SMOOSH'),
-            ('IMINYR', r'IM IN YR'),
-            ('IMOUTTAYR', r'IM OUTTA YR'),
-            ('HOWIZI', r'HOW IZ I'),
-            ('IFUSAYSO', r'IF U SAY SO'),
-            ('FOUNDYR', r'FOUND YR'),
-            ('IIZ', r'I IZ'),
-            ('UPPIN', r'UPPIN'),
-            ('NERFIN', r'NERFIN'),
-            ('YR', r'YR'),
-            ('TIL', r'TIL'),
-            ('WILE', r'WILE'),
-            ('GTFO', r'GTFO'),
-            ('MKAY', r'MKAY'),
-            ('VAR', r'[a-zA-Z_][a-zA-Z0-9_]*'),
-            ('FUNC', r'[a-zA-Z_][a-zA-Z0-9_]*'),
-            ('LOOP', r'[a-zA-Z][a-zA-Z0-9_]*'),
-            ('NUM', r'-?[0-9]+'),
+            ('OMGWTF', r'OMGWTF\b'),
+            ('OMG', r'OMG\b'),
+
+            ('IMINYR', r'IM IN YR\b'),
+            ('IMOUTTAYR', r'IM OUTTA YR\b'),
+            ('HOWIZI', r'HOW IZ I\b'),
+            ('IFUSAYSO', r'IF U SAY SO\b'),
+            ('FOUNDYR', r'FOUND YR\b'),
+            ('IIZ', r'I IZ\b'),
+
+            ('UPPIN', r'UPPIN\b'),
+            ('NERFIN', r'NERFIN\b'),
+            ('TIL', r'TIL\b'),
+            ('WILE', r'WILE\b'),
+            ('GTFO', r'GTFO\b'),
+
+            ('PRINT', r'VISIBLE\b'),
+            ('GIMMEH', r'GIMMEH\b'),
+
+            ('MKAY', r'MKAY\b'),
+            ('YR', r'YR\b'),
+            ('MAEK', r'MAEK\b'),
+            ('A', r'A\b'),
+            ('R', r'R\b'),
+
+            # recognize types before variable identifiers
+            ('TYPE', r'(?:TROOF|NOOB|NUMBR|NUMBAR|YARN|TYPE)\b'),
+
+            # recognize boolean values before variable identifiers
+            ('TROOF', r'(?:WIN|FAIL)\b'),
+
+            # recognize decimal numbers before whole numbers
             ('NUMBAR', r'-?[0-9]+\.[0-9]+'),
-            ('YARN', r'"[^"]*"'),
-            ('TROOF', r'(WIN|FAIL)'),
-            ('TYPE', r'(TROOF|NOOB|NUMBR|NUMBAR|YARN|TYPE)')
+            ('NUM', r'-?[0-9]+'),
+
+            # recognize strings enclosed in double quotes
+            ('YARN', r'"[^"\n]*"'),
+
+            # recognize variable identifiers
+            ('VAR', r'[a-zA-Z_][a-zA-Z0-9_]*'),
+
+            # ignore spaces and tabs
+            ('SKIP', r'[ \t]+'),
+
+            # track newlines
+            ('NEWLINE', r'\n'),
+
+            # catch any unrecognized character
+            ('MISMATCH', r'.'),
         ]
 
-        tokens_join = '|'.join('(?P<%s>%s)' % x for x in rules)
-        lin_start = 0
+        # combine all token rules into one regex
+        self.regex = re.compile(
+            '|'.join(
+                '(?P<{}>{})'.format(name, pattern)
+                for name, pattern in self.rules
+            )
+        )
 
-        # Lists of output for the program
+    def tokenize(self, code):
+        # store the infos
         token = []
         lexeme = []
-        row = []
-        column = []
 
-        # It analyzes the code to find the lexemes and their respective Tokens
-        for m in re.finditer(tokens_join, code):
-            token_type = m.lastgroup
-            token_lexeme = m.group(token_type)
+        # track the current line and column
 
-            if token_type == 'NEWLINE':
-                lin_start = m.end()
-                self.lin_num += 1
-            elif token_type == 'SKIP':
+        # track the current line
+        line_no = 1
+        line_start = 0
+        # check if comment
+        is_comment = False
+
+        for match in self.regex.finditer(code):
+
+            token_type = match.lastgroup
+            value = match.group()
+
+            position = match.end
+
+            if token_type == 'OBTW':
+                is_comment = True
                 continue
-            elif token_type == 'MISMATCH':
-                raise RuntimeError('%r unexpected on line %d' % (token_lexeme, self.lin_num))
-            else:
-                col = m.start() - lin_start
-                column.append(col)
-                token.append(token_type)
-                lexeme.append(token_lexeme)
-                row.append(self.lin_num)
-                # To print information about a Token
-                print('Token = {0}, Lexeme = \'{1}\', Row = {2}, Column = {3}'.format(token_type, token_lexeme, self.lin_num, col))
 
-        return token, lexeme, row, column
-    
+            if is_comment:
+                if token_type == 'TLDR':
+                    is_comment = False
+                continue
+
+            if token_type in ('SKIP', 'NEWLINE'):
+                continue
+
+            if token_type == 'BTW':
+                next_nl = code.find('\n', position)
+
+                if next_nl == 1:
+                    break
+
+                position = next_nl + 1
+                continue
+
+            if token_type == 'MISMATCH':
+                print("Lexical Error")
+                continue
+
+            token.append(token_type)
+            lexeme.append(value)
+
+        return token, lexeme
+
+            
