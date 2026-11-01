@@ -14,7 +14,7 @@ class LexicalAnalyzer:
 
             ('OBTW', r'OBTW\b'),
             ('TLDR', r'TLDR\b'),
-            ('BTW', r'BTW\b'),
+            ('BTW', r'BTW[^\n]\b'),
 
             ('VARDEC', r'I HAS A\b'),
             ('ASSIGN', r'ITZ\b'),
@@ -64,6 +64,7 @@ class LexicalAnalyzer:
             ('MKAY', r'MKAY\b'),
             ('YR', r'YR\b'),
             ('MAEK', r'MAEK\b'),
+            ('AN', r'AN\b'),
             ('A', r'A\b'),
             ('R', r'R\b'),
 
