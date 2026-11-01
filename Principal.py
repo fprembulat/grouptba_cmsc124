@@ -3,6 +3,7 @@ from Buffer import Buffer
 from LexicalAnalyzer import LexicalAnalyzer
 from SymbolTable import SymbolTable
 from LexemeTable import LexemeTable
+from SyntaxAnalyzer import syntax
 
 if __name__ == '__main__':
 
@@ -22,8 +23,13 @@ if __name__ == '__main__':
         token += t
         lexeme += lex
     
-    lex = lexeme_table.build(token, lexeme)
-    print(lex)
+    print(lexeme_table.build(token, lexeme))
     print(symbol_table.build(token,lexeme))
+
+    try: 
+        syntax(token)
+        print('Syntax OK')
+    except SyntaxError as e:
+        print('SyntaxError:', e)
 
 
