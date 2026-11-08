@@ -1,7 +1,4 @@
 HAI
-    I HAS A var ITZ 12
-    VISIBLE "noot noot" var
-    OBTW 
-    solid 
-    TLDR
+    BTW This is a single-line comment.
+    VISIBLE "Hello"
 KTHXBYE

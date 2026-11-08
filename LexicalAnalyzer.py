@@ -14,13 +14,13 @@ class LexicalAnalyzer:
 
             ('OBTW', r'OBTW\b'),
             ('TLDR', r'TLDR\b'),
-            ('BTW', r'BTW[^\n]\b'),
+            ('BTW', r'BTW[^\n]*'),
 
             ('VARDEC', r'I HAS A\b'),
             ('ASSIGN', r'ITZ\b'),
             ('ISNOWA', r'IS NOW A\b'),
 
-            ('QUOSHUNTOF', r'QUOSHUNT OF\b'),
+            ('QUOSHUNT', r'QUOSHUNT OF\b'),
             ('PRODUKT', r'PRODUKT OF\b'),
             ('SMALLR', r'SMALLR OF\b'),
             ('BOTHSAEM', r'BOTH SAEM\b'),
@@ -29,8 +29,10 @@ class LexicalAnalyzer:
             ('DIFF', r'DIFF OF\b'),
             ('MOD', r'MOD OF\b'),
             ('BIGGR', r'BIGGR OF\b'),
+            ('BOTHOF', r'BOTH OF\b'),
             ('EITHER', r'EITHER OF\b'),
             ('NOTOF', r'NOT OF\b'),
+            ('NOT', r'NOT\b'),
             ('WONOF', r'WON OF\b'),
             ('ANYOF', r'ANY OF\b'),
             ('ALLOF', r'ALL OF\b'),
@@ -120,7 +122,7 @@ class LexicalAnalyzer:
             token_type = match.lastgroup
             value = match.group()
 
-            position = match.end
+            position = match.end()
 
             if token_type == 'OBTW':
                 is_comment = True
@@ -131,7 +133,12 @@ class LexicalAnalyzer:
                     is_comment = False
                 continue
 
-            if token_type in ('SKIP', 'NEWLINE'):
+            if token_type == 'SKIP':
+                continue
+
+            if token_type == 'NEWLINE':
+                token.append('NEWLINE')
+                lexeme.append('\\n')
                 continue
 
             if token_type == 'BTW':
@@ -149,6 +156,8 @@ class LexicalAnalyzer:
 
             token.append(token_type)
             lexeme.append(value)
+        if is_comment:
+            raise SyntaxError("OBTW must be closed with TLDR")
 
         return token, lexeme
 

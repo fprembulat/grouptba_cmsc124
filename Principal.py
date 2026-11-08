@@ -13,22 +13,23 @@ if __name__ == '__main__':
     symbol_table = SymbolTable()
     lexeme_table = LexemeTable()
 
-    # Lists for every list returned list from the function tokenize
     token = []
     lexeme = []
 
-    for code in buffer.load_buffer():
-        t, lex = analyzer.tokenize(code) # tokenize the code
-
-        token += t
-        lexeme += lex
-    
-    print(lexeme_table.build(token, lexeme))
-    print(symbol_table.build(token,lexeme))
-
     try: 
+
+        for code in buffer.load_buffer():
+            t, lex = analyzer.tokenize(code) # tokenize the code
+            token += t
+            lexeme += lex
+    
+        print("Tokens: ", token)
+        print("Lexemes: ", lexeme)
         syntax(token)
         print('Syntax OK')
+
+        print(lexeme_table.build(token, lexeme))
+        print(symbol_table.build(token,lexeme))
     except SyntaxError as e:
         print('SyntaxError:', e)
 
