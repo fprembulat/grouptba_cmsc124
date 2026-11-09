@@ -16,6 +16,8 @@ class LexicalAnalyzer:
             ('TLDR', r'TLDR\b'),
             ('BTW', r'BTW[^\n]*'),
 
+            ('SMOOSH', r'SMOOSH\b'),
+
             ('VARDEC', r'I HAS A\b'),
             ('ASSIGN', r'ITZ\b'),
             ('ISNOWA', r'IS NOW A\b'),
@@ -71,7 +73,8 @@ class LexicalAnalyzer:
             ('R', r'R\b'),
 
             # recognize types before variable identifiers
-            ('TYPE', r'(?:TROOF|NOOB|NUMBR|NUMBAR|YARN|TYPE)\b'),
+            ('NOOB', r'NOOB\b'),
+            ('TYPE', r'(?:TROOF|NUMBR|NUMBAR|YARN|TYPE)\b'),
 
             # recognize boolean values before variable identifiers
             ('TROOF', r'(?:WIN|FAIL)\b'),

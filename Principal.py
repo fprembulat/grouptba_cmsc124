@@ -26,10 +26,10 @@ if __name__ == '__main__':
         print("Tokens: ", token)
         print("Lexemes: ", lexeme)
         syntax(token)
-        print('Syntax OK')
 
         print(lexeme_table.build(token, lexeme))
         print(symbol_table.build(token,lexeme))
+        print("Syntax OK")
     except SyntaxError as e:
         print('SyntaxError:', e)
 

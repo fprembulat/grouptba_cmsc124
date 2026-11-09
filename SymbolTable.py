@@ -15,6 +15,8 @@ class SymbolTable:
                 # should be followed by a valid variable name
                 if i + 1 < len(token) and token[i+1] == 'VAR':
                     name = lexeme[i+1] # store the name
+                    if name in self.symbols:
+                        raise SyntaxError("Variable " + name + " is already declared")
 
                 value = 'NOOB' # defult value, it means no value assigned in LOLCODE
 

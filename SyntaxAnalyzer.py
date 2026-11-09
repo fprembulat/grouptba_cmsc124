@@ -4,15 +4,15 @@
 # MAIN FUNCTION
 # -----------------------------------------------------
 
-def syntax(lex):
+def syntax(token):
 
     # -----------------------------------------------------
     # check if program starts with HAI
-    if not lex or lex[0] != 'START':
+    if not token or token[0] != 'START':
         raise SyntaxError('must start with HAI')
 
     # check if program ends with KTHXBYE
-    if lex[-1] != 'END':
+    if token[-1] != 'END':
         raise SyntaxError('must end with KTHXBYE')
     # -----------------------------------------------------
 
@@ -21,37 +21,46 @@ def syntax(lex):
 
     # -----------------------------------------------------
     # loop through all tokens until KTHXBYE
-    while i < len(lex) - 1:
+    while i < len(token) - 1:
 
         # skip newlines
-        if lex[i] == 'NEWLINE':
+        if token[i] == 'NEWLINE':
             i += 1
         
-        elif lex[i] == 'WAZZUP':
-            i = wazzup_helper(lex, i)
+        elif token[i] == 'WAZZUP':
+            i = wazzup_helper(token, i)
 
         # variable declaration
-        elif lex[i] == 'VARDEC':
-            i = vardec_helper(lex, i)
+        elif token[i] == 'VARDEC':
+            i = vardec_helper(token, i)
 
         # output statement
-        elif lex[i] == 'PRINT':
-            i = print_helper(lex, i)
+        elif token[i] == 'PRINT':
+            i = print_helper(token, i)
+
+        elif token[i] == 'ORLY':
+            i = orly_helper(token, i)
+
+        elif token[i] == 'WTF':
+            i = wtf_helper(token, i)
 
         # input statement
-        elif lex[i] == 'GIMMEH':
-            i = input_helper(lex, i)
+        elif token[i] == 'GIMMEH':
+            i = input_helper(token, i)
 
-        elif lex[i] == 'VAR':
-            i = assign_helper(lex, i)
+        elif token[i] == 'VAR':
+            if i + 1 < len(token) and token[i + 1] == 'NEWLINE':
+                i += 1
+            else:
+                i = assign_helper(token, i)    
 
         # multiline comment
-        elif lex[i] == 'OBTW':
-            i = comm_helper(lex, i)
+        elif token[i] == 'OBTW':
+            i = comm_helper(token, i)
 
         # unexpected token
         else:
-            raise SyntaxError('Unexpected token: ' + lex[i])
+            raise SyntaxError('Unexpected token: ' + token[i])
     # -----------------------------------------------------
 
 # -----------------------------------------------------
@@ -60,29 +69,29 @@ def syntax(lex):
 
 # VARDEC HELPER
 # -----------------------------------------------------
-def vardec_helper(lex, i):
-    if i + 1 >= len(lex) or lex[i + 1] != 'VAR':
+def vardec_helper(token, i):
+    if i + 1 >= len(token) or token[i + 1] != 'VAR':
         raise SyntaxError("Variable declaration must have a variable name")
 
     i += 2
 
-    if i < len(lex) and lex[i] == 'ASSIGN':
-        if i + 1 < len(lex) and lex[i + 1] in ('SUM', 'DIFF', 'PRODUKT', 'QUOSHUNT', 'MOD', 'BIGGR', 'SMALLR'):
-            i = arithmetic_helper(lex, i+1)
+    if i < len(token) and token[i] == 'ASSIGN':
+        if i + 1 < len(token) and token[i + 1] in ('SUM', 'DIFF', 'PRODUKT', 'QUOSHUNT', 'MOD', 'BIGGR', 'SMALLR'):
+            i = arithmetic_helper(token, i+1)
 
-        elif i + 1 < len(lex) and lex[i + 1] in ('BOTHSAEM', 'DIFFRINT'):
-            i = comparison_helper(lex, i + 1)
+        elif i + 1 < len(token) and token[i + 1] in ('BOTHSAEM', 'DIFFRINT'):
+            i = comparison_helper(token, i + 1)
         
-        elif i + 1 < len(lex) and lex[i + 1] in ('BOTHOF', 'EITHER', 'WONOF'):
-            i = boolean_helper(lex, i + 1)
+        elif i + 1 < len(token) and token[i + 1] in ('BOTHOF', 'EITHER', 'WONOF'):
+            i = boolean_helper(token, i + 1)
 
-        elif i + 1 < len(lex) and lex[i + 1] in ('ALLOF', 'ANYOF'):
-            i = infinite_boolean_helper(lex, i + 1)
+        elif i + 1 < len(token) and token[i + 1] in ('ALLOF', 'ANYOF'):
+            i = infinite_boolean_helper(token, i + 1)
 
-        elif i + 1 < len(lex) and lex[i + 1] == 'NOT':
-            i = not_helper(lex, i + 1)
+        elif i + 1 < len(token) and token[i + 1] == 'NOT':
+            i = not_helper(token, i + 1)
         
-        elif i + 1 <len(lex) and lex[i + 1] in ('NUM', 'YARN', 'VAR'):
+        elif i + 1 <len(token) and token[i + 1] in ('NUM', 'YARN', 'VAR', 'NOOB'):
             i += 2
         
         else:
@@ -91,11 +100,11 @@ def vardec_helper(lex, i):
 # -----------------------------------------------------
 
 # -----------------------------------------------------
-def comm_helper(lex):	
+def comm_helper(token):	
     i += 1
 
-    while i < len(lex):
-        if lex[i] == 'TLDR':
+    while i < len(token):
+        if token[i] == 'TLDR':
             return i + 1
 
         i += 1
@@ -104,26 +113,26 @@ def comm_helper(lex):
 # -----------------------------------------------------
 
 # -----------------------------------------------------
-def print_helper(lex, i):
+def print_helper(token, i):
     i += 1
 
-    if i >= len(lex) or lex[i] == 'NEWLINE':
+    if i >= len(token) or token[i] == 'NEWLINE':
         raise SyntaxError('VISIBLE must be followed by a value')
 
-    if lex[i] not in ('VAR', 'NUM', 'YARN'):
+    if token[i] not in ('VAR', 'NUM', 'YARN', 'NOOB'):
         raise SyntaxError("Invalid value")
 
     i += 1
     
-    while i < len(lex) and lex[i] in ('VAR', 'NUM', 'YARN'):
+    while i < len(token) and token[i] in ('VAR', 'NUM', 'YARN', 'NOOB'):
         i += 1
 
     return i
 # -----------------------------------------------------
 
 # -----------------------------------------------------
-def input_helper(lex, i):
-	if i + 1 >= len(lex) or lex[i + 1] != 'VAR':
+def input_helper(token, i):
+	if i + 1 >= len(token) or token[i + 1] != 'VAR':
 		raise SyntaxError('GIMMEH must be followed by a variable')
 
 	return i + 2
@@ -131,11 +140,11 @@ def input_helper(lex, i):
 
 # ASSIGNMENT HELPER
 # -----------------------------------------------------
-def assign_helper(lex, i):
-    if i + 1 >= len(lex) or lex[i + 1] != 'R':
+def assign_helper(token, i):
+    if i + 1 >= len(token) or token[i + 1] != 'R':
         raise SyntaxError("Variable must be followed by R")
 
-    if i + 2 >= len(lex) or lex[i + 2] not in ('VAR', 'NUM', 'YARN'):
+    if i + 2 >= len(token) or token[i + 2] not in ('VAR', 'NUM', 'YARN', 'NOOB'):
         raise SyntaxError("R must be followed by a value")
     
     return i + 3
@@ -143,17 +152,17 @@ def assign_helper(lex, i):
 
 # ARITHMETIC HELPER
 # -----------------------------------------------------
-def arithmetic_helper(lex, i):
+def arithmetic_helper(token, i):
 
-    operator = lex[i]
+    operator = token[i]
 
-    if i + 1 >= len(lex) or lex[i + 1] not in ('NUM', 'VAR'):
+    if i + 1 >= len(token) or token[i + 1] not in ('NUM', 'VAR'):
         raise SyntaxError(operator + " OF must have a first operand")
 
-    if i + 2 >= len(lex) or lex[i + 2] != 'AN':
+    if i + 2 >= len(token) or token[i + 2] != 'AN':
         raise SyntaxError(operator + " OF must have AN between operands")
     
-    if i + 3 >= len(lex) or lex[i + 3] not in ('NUM', 'VAR'):
+    if i + 3 >= len(token) or token[i + 3] not in ('NUM', 'VAR'):
         raise SyntaxError(operator + " OF must have a second operand")
     
     return i + 4
@@ -161,16 +170,16 @@ def arithmetic_helper(lex, i):
 
 # COMPARISON HELPER
 # -----------------------------------------------------
-def comparison_helper(lex, i):
-    operator = lex[i]
+def comparison_helper(token, i):
+    operator = token[i]
 
-    if i + 1 >= len(lex) or lex[i + 1] not in ('NUM', 'VAR'):
+    if i + 1 >= len(token) or token[i + 1] not in ('NUM', 'VAR'):
         raise SyntaxError(operator + " OF must have a first operand")
 
-    if i + 2 >= len(lex) or lex[i + 2] != 'AN':
+    if i + 2 >= len(token) or token[i + 2] != 'AN':
         raise SyntaxError(operator + " OF must have AN between operands")
     
-    if i + 3 >= len(lex) or lex[i + 3] not in ('NUM', 'VAR'):
+    if i + 3 >= len(token) or token[i + 3] not in ('NUM', 'VAR'):
         raise SyntaxError(operator + " OF must have a second operand")
 
     return i + 4
@@ -178,16 +187,16 @@ def comparison_helper(lex, i):
 
 # BOOLEAN HELPER
 # -----------------------------------------------------
-def boolean_helper(lex, i):
-    operator = lex[i]
+def boolean_helper(token, i):
+    operator = token[i]
 
-    if i + 1 >= len(lex) or lex[i + 1] not in ('TROOF', 'VAR'):
+    if i + 1 >= len(token) or token[i + 1] not in ('TROOF', 'VAR'):
         raise SyntaxError(operator + " OF must have a first operand")
 
-    if i + 2 >= len(lex) or lex[i + 2] != 'AN':
+    if i + 2 >= len(token) or token[i + 2] != 'AN':
         raise SyntaxError(operator + " OF must have AN between operands")
     
-    if i + 3 >= len(lex) or lex[i + 3] not in ('TROOF', 'VAR'):
+    if i + 3 >= len(token) or token[i + 3] not in ('TROOF', 'VAR'):
         raise SyntaxError(operator + " OF must have a second operand")
 
     return i + 4
@@ -195,8 +204,8 @@ def boolean_helper(lex, i):
 
 # NOT HELPER
 # -----------------------------------------------------
-def not_helper(lex, i):
-    if i + 1 >= len(lex) or lex[i + 1] not in ('TROOF', 'VAR'):
+def not_helper(token, i):
+    if i + 1 >= len(token) or token[i + 1] not in ('TROOF', 'VAR'):
         raise SyntaxError("NOT must be followed by a boolean value")
 
     return i + 2
@@ -204,25 +213,25 @@ def not_helper(lex, i):
 
 # INFINITE BOOLEAN HELPER
 # -----------------------------------------------------
-def infinite_boolean_helper(lex, i):
-    operator = lex[i]
+def infinite_boolean_helper(token, i):
+    operator = token[i]
 
     i += 1
 
-    if i >= len(lex) or lex[i] not in ('TROOF', 'VAR'):
+    if i >= len(token) or token[i] not in ('TROOF', 'VAR'):
         raise SyntaxError(operator + " must have atleast one operand")
     
     i += 1
 
-    while i < len(lex) and lex[i] == 'AN':
+    while i < len(token) and token[i] == 'AN':
         i += 1
 
-        if i >= len(lex) or lex[i] not in ('TROOF', 'VAR'):
+        if i >= len(token) or token[i] not in ('TROOF', 'VAR'):
             raise SyntaxError(operator + " must have an operand after AN")
             
         i += 1
 
-    if i >= len(lex) or lex[i] != 'MKAY':
+    if i >= len(token) or token[i] != 'MKAY':
         raise SyntaxError(operator + " must end with MKAY")
 
     return i + 1
@@ -230,22 +239,124 @@ def infinite_boolean_helper(lex, i):
 
 # WAZZUP HELPER
 # -----------------------------------------------------
-def wazzup_helper(lex, i):
+def wazzup_helper(token, i):
     i += 1
 
-    while i < len(lex) and lex[i] == 'NEWLINE':
+    while i < len(token) and token[i] == 'NEWLINE':
         i += 1
 
-    while i <len(lex) and lex[i] != 'BUHBYE':
-        if lex[i] == 'VARDEC':
-            i = vardec_helper(lex, i)
-        elif lex[i] == 'NEWLINE':
+    while i <len(token) and token[i] != 'BUHBYE':
+        if token[i] == 'VARDEC':
+            i = vardec_helper(token, i)
+        elif token[i] == 'NEWLINE':
             i += 1
+        elif token[i] == 'END':
+            raise SyntaxError("WAZZUP must end with BUHBYE")
         else:
             raise SyntaxError("Only variable declarations are allowed inside WAZZUP")
     
-    if i >= len(lex):
-        raise SyntaxError("WAZZP must be closed with BUHBYE")
+    return i + 1
+# -----------------------------------------------------
+
+# ORLY HELPER
+# -----------------------------------------------------
+def orly_helper(token, i):
+    i += 1
+
+    while i < len(token) and token[i] == 'NEWLINE':
+        i += 1
+
+    if i >= len(token) or token[i] != 'YARLY':
+        raise SyntaxError("O RLY must be followed by YA RLY")
+
+    i += 1
+
+    while i < len(token) and token[i] not  in ('NOWAI', 'OIC'):
+        if token[i] == 'NEWLINE':
+            i += 1
+        elif token[i] == 'PRINT':
+            i = print_helper(token, i)
+        elif token[i] == 'VAR':
+            if i + 1 < len(token) and token[i + 1] == 'R':
+                i = assign_helper(token, i)
+            else:
+                raise SyntaxError("Invalid statement inside YA RLY")
+        elif token[i] == 'END':
+            raise SyntaxError("O RLY must end with OIC")
+        else:
+            raise SyntaxError("Invalid statement inside YA RLY")
+            
+    if i < len(token) and token[i] == 'NOWAI':
+        i += 1
+
+        while i < len(token) and token[i] not  in ('NOWAI', 'OIC'):
+            if token[i] == 'NEWLINE':
+                i += 1
+            elif token[i] == 'PRINT':
+                i = print_helper(token, i)
+            elif token[i] == 'VAR':
+                if i + 1 < len(token) and token[i + 1] == 'R':
+                    i = assign_helper(token, i)
+                else: 
+                    raise SyntaxError("Invalid statement inside NOWAI")
+            elif token[i] == 'END':
+                raise SyntaxError("O RLY must end with OIC")
+            else: 
+                raise SyntaxError("Invalid statement inside NOWAI")
+
+    if i >= len(token):
+        raise SyntaxError("O RLY must end with OIC")
     
+    return i + 1
+# -----------------------------------------------------
+
+# WTF HELPER
+# -----------------------------------------------------
+def wtf_helper(token, i):
+    i += 1
+
+    while i < len(token) and token[i] == 'NEWLINE':
+        i += 1
+
+    has_omg = False
+    has_omgwtf = False
+
+    while i < len(token) and token[i] != 'OIC':
+        if token[i] == 'NEWLINE':
+            i += 1
+        elif token[i] == 'OMG':
+            if has_omgwtf:
+                raise SyntaxError("OMG cannot appear after OMGWTF")
+            i += 1
+
+            if i >= len(token) or token[i] not in ('NUM', 'YARN', 'TROOF'):
+                raise SyntaxError("OMG must be followed by a value")
+
+            has_omg = True
+            i += 1
+        elif token[i] == 'OMGWTF':
+            if has_omgwtf:
+                raise SyntaxError("OMGWTF can only appear once")
+
+            has_omgwtf = True
+            i += 1
+        elif token[i] == 'PRINT':
+            i = print_helper(token, i)
+        elif token[i] == 'VAR':
+            if i + 1 < len(token) and token[i + 1] == 'R':
+                i = assign_helper(token, i)
+            else:
+                raise SyntaxError("Invalid statement inside WTF")
+        elif token[i] == 'GTFO':
+            i += 1
+        else:
+            raise SyntaxError("Invalid statement inside WTF")
+        
+    if not has_omg:
+        raise SyntaxError("WTF must have at least one OMG case")
+
+    if i >= len(token):
+        raise SyntaxError("WTF must end with OIC")
+
     return i + 1
 # -----------------------------------------------------
