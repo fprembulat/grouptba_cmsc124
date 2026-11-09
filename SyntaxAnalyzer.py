@@ -26,6 +26,9 @@ def syntax(lex):
         # skip newlines
         if lex[i] == 'NEWLINE':
             i += 1
+        
+        elif lex[i] == 'WAZZUP':
+            i = wazzup_helper(lex, i)
 
         # variable declaration
         elif lex[i] == 'VARDEC':
@@ -222,5 +225,27 @@ def infinite_boolean_helper(lex, i):
     if i >= len(lex) or lex[i] != 'MKAY':
         raise SyntaxError(operator + " must end with MKAY")
 
+    return i + 1
+# -----------------------------------------------------
+
+# WAZZUP HELPER
+# -----------------------------------------------------
+def wazzup_helper(lex, i):
+    i += 1
+
+    while i < len(lex) and lex[i] == 'NEWLINE':
+        i += 1
+
+    while i <len(lex) and lex[i] != 'BUHBYE':
+        if lex[i] == 'VARDEC':
+            i = vardec_helper(lex, i)
+        elif lex[i] == 'NEWLINE':
+            i += 1
+        else:
+            raise SyntaxError("Only variable declarations are allowed inside WAZZUP")
+    
+    if i >= len(lex):
+        raise SyntaxError("WAZZP must be closed with BUHBYE")
+    
     return i + 1
 # -----------------------------------------------------
