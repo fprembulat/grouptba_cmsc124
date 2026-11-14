@@ -130,8 +130,23 @@ def vardec_helper(token, lexeme, i, symbols):
             # move past: ITZ, operator, first value, AN, second value
             i += 5
 
-        # other expressions (BOTH OF, NOT, ...) will be added in the next bits
-        # for now, just move past ITZ
+        # boolean after ITZ (BOTH OF a AN b, EITHER OF a AN b, WON OF a AN b)
+        elif token[i + 1] in ('BOTHOF', 'EITHER', 'WONOF'):
+            var_type = boolean_helper(token, lexeme, i + 1, symbols)
+            # move past: ITZ, operator, first value, AN, second value
+            i += 5
+
+        # NOT after ITZ (NOT a)
+        elif token[i + 1] == 'NOT':
+            var_type = not_helper(token, lexeme, i + 1, symbols)
+            # move past: ITZ, NOT, value
+            i += 3
+
+        # infinite boolean after ITZ (ALL OF a AN b MKAY, ANY OF a AN b MKAY)
+        elif token[i + 1] in ('ALLOF', 'ANYOF'):
+            var_type = 'TROOF'
+            i = infinite_boolean_helper(token, lexeme, i + 1, symbols)
+
         else:
             i += 1
 
@@ -262,5 +277,75 @@ def comparison_helper(token, lexeme, i, symbols):
 
     # a comparison always answers WIN or FAIL
     return 'TROOF'
+# -----------------------------------------------------
+
+# BOOLEAN HELPER
+# -----------------------------------------------------
+# checks BOTH OF a AN b, EITHER OF a AN b, WON OF a AN b
+#   both values must be TROOF (WIN or FAIL)
+def boolean_helper(token, lexeme, i, symbols):
+
+    operator = lexeme[i]
+
+    # the values are at i + 1 and i + 3 (i + 2 is AN)
+    first_type = get_operand_type(token, lexeme, i + 1, symbols)
+    second_type = get_operand_type(token, lexeme, i + 3, symbols)
+
+    # check the first value
+    if first_type != 'TROOF':
+        raise SemanticError(operator + " requires a TROOF value, got " + first_type + " (" + lexeme[i + 1] + ")")
+
+    # check the second value
+    if second_type != 'TROOF':
+        raise SemanticError(operator + " requires a TROOF value, got " + second_type + " (" + lexeme[i + 3] + ")")
+
+    return 'TROOF'
+# -----------------------------------------------------
+
+# NOT HELPER
+# -----------------------------------------------------
+# checks NOT a
+#   the value after NOT must be TROOF (WIN or FAIL)
+def not_helper(token, lexeme, i, symbols):
+
+    operand_type = get_operand_type(token, lexeme, i + 1, symbols)
+
+    if operand_type != 'TROOF':
+        raise SemanticError("NOT requires a TROOF value, got " + operand_type + " (" + lexeme[i + 1] + ")")
+
+    return 'TROOF'
+# -----------------------------------------------------
+
+# INFINITE BOOLEAN HELPER
+# -----------------------------------------------------
+# checks ALL OF a AN b AN c MKAY and ANY OF a AN b MKAY
+#   every value before MKAY must be TROOF (WIN or FAIL)
+def infinite_boolean_helper(token, lexeme, i, symbols):
+
+    operator = lexeme[i]
+
+    # move past ALL OF / ANY OF to the first operand
+    i += 1
+
+    # check the first operand
+    first_type = get_operand_type(token, lexeme, i, symbols)
+    if first_type != 'TROOF':
+        raise SemanticError(operator + " requires a TROOF value, got " + first_type + " (" + lexeme[i] + ")")
+
+    i += 1
+
+    # check all remaining operands separated by AN
+    while i < len(token) and token[i] == 'AN':
+        # move past AN to the next operand
+        i += 1
+
+        next_type = get_operand_type(token, lexeme, i, symbols)
+        if next_type != 'TROOF':
+            raise SemanticError(operator + " requires a TROOF value, got " + next_type + " (" + lexeme[i] + ")")
+
+        i += 1
+
+    # move past MKAY
+    return i + 1
 # -----------------------------------------------------
 
