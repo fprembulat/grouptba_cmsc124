@@ -250,16 +250,58 @@ def arithmetic_helper(token, lexeme, i, symbols):
     # check the first value
     if first_type not in ('NUM', 'NUMBAR', 'YARN'):
         raise SemanticError(operator + " cannot use a " + first_type + " value (" + lexeme[i + 1] + ")")
+    if first_type == 'YARN':
+        check_yarn_is_number(token, lexeme, i + 1, operator)
 
     # check the second value
     if second_type not in ('NUM', 'NUMBAR', 'YARN'):
         raise SemanticError(operator + " cannot use a " + second_type + " value (" + lexeme[i + 3] + ")")
+    if second_type == 'YARN':
+        check_yarn_is_number(token, lexeme, i + 3, operator)
 
     # decide the type of the answer
     if first_type == 'NUMBAR' or second_type == 'NUMBAR':
         return 'NUMBAR'
     else:
         return 'NUM'
+# -----------------------------------------------------
+
+# CHECK YARN IS NUMBER HELPER
+# -----------------------------------------------------
+# checks if a YARN used in math actually contains digits (like "12" or "3.5")
+# if it contains letters (like "hi"), float() fails and we catch the ValueError
+def check_yarn_is_number(token, lexeme, index, operator):
+
+    # if the token itself is a YARN literal
+    if token[index] == 'YARN':
+        yarn_value = lexeme[index]
+
+    # if it is a variable holding a YARN, find the value assigned to it
+    else:
+        var_name = lexeme[index]
+        yarn_value = None
+
+        j = 0
+        while j < index:
+            # from: I HAS A s ITZ "hi"
+            if token[j] == 'VARDEC' and lexeme[j + 1] == var_name and j + 3 < len(token) and token[j + 2] == 'ASSIGN':
+                yarn_value = lexeme[j + 3]
+
+            # from: s R "hi"
+            elif token[j] == 'VAR' and lexeme[j] == var_name and j + 2 < len(token) and token[j + 1] == 'R':
+                yarn_value = lexeme[j + 2]
+
+            j += 1
+
+    # if we found the string value (like '"hi"' or '"12"'), test if it is a number
+    if yarn_value is not None and yarn_value.startswith('"'):
+        # remove the double quotes around the string
+        text = yarn_value.strip('"')
+
+        try:
+            float(text)
+        except ValueError:
+            raise SemanticError(operator + " cannot convert YARN " + yarn_value + " to a number")
 # -----------------------------------------------------
 
 # COMPARISON HELPER
