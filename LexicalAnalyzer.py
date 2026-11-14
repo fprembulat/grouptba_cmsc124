@@ -130,6 +130,9 @@ class LexicalAnalyzer:
             if token_type == 'OBTW':
                 is_comment = True
                 continue
+            
+            if token_type == 'BTW':
+                continue
 
             if is_comment:
                 if token_type == 'TLDR':

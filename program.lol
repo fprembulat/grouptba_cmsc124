@@ -1,4 +1,4 @@
 HAI
-    I HAS A name ITZ "Fran"
-    VISIBLE SMOOSH "Hello " AN name MKAY
+BTW This is a single-line comment
+VISIBLE "Hello World!"
 KTHXBYE
