@@ -1,6 +1,6 @@
 # THIS IS THE MAIN FILE
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, scrolledtext
 
 from Buffer import Buffer
 from LexicalAnalyzer import LexicalAnalyzer
@@ -20,6 +20,7 @@ class App(tk.Tk):
 
         self.build_toolbar()
         self.build_tables()
+        self.load_editor()
 
         self.analyze()
 
@@ -34,6 +35,12 @@ class App(tk.Tk):
     def build_tables(self):
         panes = ttk.PanedWindow(self, orient="horizontal")
         panes.grid(row=1, column=0, sticky="nsew", padx=6)
+
+        # text editor
+        edit_frame = ttk.LabelFrame(panes, text="Text editor")
+        self.editor = scrolledtext.ScrolledText(edit_frame, width=40, font=("Consolas", 11))
+        self.editor.pack(fill="both", expand=True)
+        panes.add(edit_frame, weight=3)
 
         tok_frame = ttk.LabelFrame(panes, text="Tokens and lexemes")
         self.token_tree = self.make_table(
@@ -63,6 +70,11 @@ class App(tk.Tk):
     def clear_tables(self):
         for tree in (self.token_tree, self.symbol_tree):
             tree.delete(*tree.get_children())
+
+    def load_editor(self):
+        # shows the contents of program.lol in the text editor
+        for code in Buffer().load_buffer():
+            self.editor.insert("1.0", code)
 
     # does the main work of the program
     def analyze(self):
@@ -104,39 +116,3 @@ class App(tk.Tk):
 
 if __name__ == "__main__":
     App().mainloop()
-# THIS IS THE MAIN FILE
-from Buffer import Buffer
-from LexicalAnalyzer import LexicalAnalyzer
-from SymbolTable import SymbolTable
-from LexemeTable import LexemeTable
-from SyntaxAnalyzer import syntax
-
-if __name__ == '__main__':
-
-    # objects
-    buffer = Buffer()
-    analyzer = LexicalAnalyzer()
-    symbol_table = SymbolTable()
-    lexeme_table = LexemeTable()
-
-    token = []
-    lexeme = []
-
-    try: 
-
-        for code in buffer.load_buffer():
-            t, lex = analyzer.tokenize(code) # tokenize the code
-            token += t
-            lexeme += lex
-    
-        print("Tokens: ", token)
-        print("Lexemes: ", lexeme)
-        syntax(token)
-
-        print(lexeme_table.build(token, lexeme))
-        print(symbol_table.build(token,lexeme))
-        print("Syntax OK")
-    except SyntaxError as e:
-        print('SyntaxError:', e)
-
-
