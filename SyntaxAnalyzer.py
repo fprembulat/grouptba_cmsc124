@@ -211,7 +211,22 @@ def not_helper(token, i):
     return i + 2
 # -----------------------------------------------------
 
+# SMOOSH HELPER
+# -----------------------------------------------------
+def smoosh_helper(token, i):
+    i += 1
 
+    if i>= len(token) or token[i] not in ('YARN', VAR):
+        raise SyntaxError("SMOOSHmust have a first value")
+    
+    i += 1
+
+    while i < len(token) and token[i] == 'AN':
+        i += 1
+
+    if i >= len(token) or token[i] not in ('YARN', 'VAR'):
+    
+# -----------------------------------------------------
 
 # INFINITE BOOLEAN HELPER
 # -----------------------------------------------------
