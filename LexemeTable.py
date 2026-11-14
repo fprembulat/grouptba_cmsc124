@@ -30,7 +30,7 @@ class LexemeTable:
             'BTW': 'Comment',
             'R': 'Variable Assignment',
             'MAEK': 'Typecasting Keyword',
-            'ISNOWA': 'Typecasting Keyword'
+            'ISNOWA': 'Typecasting Keyword',
         }
 
     def build(self, token, lexeme):

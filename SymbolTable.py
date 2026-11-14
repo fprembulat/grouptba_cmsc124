@@ -26,6 +26,21 @@ class SymbolTable:
                 self.symbols[name] = value
 
             i += 1 # increment
+
+            # 'i < len(token)' error handler so it wouldn't cause an indexerror
+            if i < len(token) and token[i] == 'PRINT':
+                j = i + 1
+                output = ""     # initial placeholder where what would be printed would be stored
+                # read the rest of the line until a newline occurs
+                while j < len(token) and token[j] != 'NEWLINE': 
+                    if token[j] == 'VAR':
+                        # if the value encountered is a variable, we translate it into its value then append to the output variable
+                        output += str(self.symbols.get(lexeme[j], 'NOOB')).strip('"') 
+                    elif token[j] in ('YARN', 'NUM', 'NUMBAR', 'TROOF'):
+                        output += lexeme[j].strip('"')
+                    j += 1
+                self.symbols['IT'] = output
+                i = j   # continue the loop from the index of the newline
         
         return self.symbols
 
