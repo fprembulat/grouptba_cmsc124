@@ -49,6 +49,14 @@ def semantic(token, lexeme):
         elif token[i] == 'PRINT':
             i = print_helper(token, lexeme, i, symbols)
 
+        # if-else conditional
+        elif token[i] == 'ORLY':
+            i = orly_helper(token, lexeme, i, symbols)
+
+        # switch-case conditional
+        elif token[i] == 'WTF':
+            i = wtf_helper(token, lexeme, i, symbols)
+
         # input statement
         elif token[i] == 'GIMMEH':
             i = input_helper(token, lexeme, i, symbols)
@@ -346,6 +354,67 @@ def infinite_boolean_helper(token, lexeme, i, symbols):
         i += 1
 
     # move past MKAY
+    return i + 1
+# -----------------------------------------------------
+
+# ORLY HELPER
+# -----------------------------------------------------
+# checks statements inside O RLY? ... YA RLY ... NO WAI ... OIC
+def orly_helper(token, lexeme, i, symbols):
+
+    # move past O RLY?
+    i += 1
+
+    while i < len(token) and token[i] != 'OIC':
+
+        if token[i] == 'PRINT':
+            i = print_helper(token, lexeme, i, symbols)
+
+        elif token[i] == 'VAR':
+            i = assign_helper(token, lexeme, i, symbols)
+
+        # skip NEWLINE, YARLY, NOWAI
+        else:
+            i += 1
+
+    # move past OIC
+    return i + 1
+# -----------------------------------------------------
+
+# WTF HELPER
+# -----------------------------------------------------
+# checks statements inside WTF? ... OMG ... OMGWTF ... OIC
+def wtf_helper(token, lexeme, i, symbols):
+
+    # move past WTF?
+    i += 1
+
+    # keep track of OMG values so the same case is not used twice
+    seen_omg = []
+
+    while i < len(token) and token[i] != 'OIC':
+
+        if token[i] == 'OMG':
+            case_value = lexeme[i + 1]
+
+            if case_value in seen_omg:
+                raise SemanticError("Duplicate OMG value " + case_value)
+
+            seen_omg.append(case_value)
+            # move past OMG and its value
+            i += 2
+
+        elif token[i] == 'PRINT':
+            i = print_helper(token, lexeme, i, symbols)
+
+        elif token[i] == 'VAR':
+            i = assign_helper(token, lexeme, i, symbols)
+
+        # skip NEWLINE, OMGWTF, GTFO
+        else:
+            i += 1
+
+    # move past OIC
     return i + 1
 # -----------------------------------------------------
 
