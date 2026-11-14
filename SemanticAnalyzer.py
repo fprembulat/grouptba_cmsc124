@@ -1,11 +1,9 @@
-# file for semantic analyzer
-#
 # the syntax analyzer checks if the code is written in the right ORDER
 # (example: I HAS A must be followed by a variable name)
-#
+
 # the semantic analyzer checks if the code MAKES SENSE
 # (example: you cannot use a variable that was never declared)
-#
+
 # to do this, we keep a dictionary called "symbols"
 #   key   = variable name   (example: 'age')
 #   value = variable type   (example: 'NUM')
@@ -30,7 +28,6 @@ def semantic(token, lexeme):
     symbols = {}
 
     # start after HAI
-    # (no need to check HAI and KTHXBYE again, the syntax analyzer already did that)
     i = 1
 
     # -----------------------------------------------------
@@ -40,6 +37,14 @@ def semantic(token, lexeme):
         # skip newlines
         if token[i] == 'NEWLINE':
             i += 1
+
+        # variable declaration block
+        elif token[i] == 'WAZZUP':
+            i = wazzup_helper(token, lexeme, i, symbols)
+
+        # variable declaration
+        elif token[i] == 'VARDEC':
+            i = vardec_helper(token, lexeme, i, symbols)
 
         # other statements will be added here in the next bits
         # for now, just move to the next token
@@ -55,11 +60,6 @@ def semantic(token, lexeme):
 
 # GET OPERAND TYPE HELPER
 # -----------------------------------------------------
-# gives back the type of the value found at token[index]
-#   - if it is a variable, check that it is declared,
-#     then give back the type saved in symbols
-#   - if it is a literal (NUM, NUMBAR, YARN, TROOF, NOOB),
-#     the token itself is already the type
 def get_operand_type(token, lexeme, index, symbols):
 
     if token[index] == 'VAR':
@@ -72,5 +72,66 @@ def get_operand_type(token, lexeme, index, symbols):
 
     else:
         return token[index]
+# -----------------------------------------------------
+
+# VARDEC HELPER
+# -----------------------------------------------------
+def vardec_helper(token, lexeme, i, symbols):
+
+    # the variable name comes right after I HAS A
+    var_name = lexeme[i + 1]
+
+    # rule 1: no declaring the same variable twice
+    if var_name in symbols:
+        raise SemanticError("Variable " + var_name + " is already declared")
+
+    # if there is no ITZ, the variable has no value yet (NOOB)
+    var_type = 'NOOB'
+
+    # move past I HAS A and the variable name
+    i += 2
+
+    # check if there is an ITZ
+    if i < len(token) and token[i] == 'ASSIGN':
+
+        # simple value after ITZ (a literal or another variable)
+        if token[i + 1] in ('NUM', 'NUMBAR', 'YARN', 'TROOF', 'NOOB', 'VAR'):
+            # rule 2 is checked inside get_operand_type
+            var_type = get_operand_type(token, lexeme, i + 1, symbols)
+            i += 2
+
+        # expressions (SUM OF, BOTH SAEM, BOTH OF, ...) will be added in the next bits
+        # for now, just move past ITZ
+        else:
+            i += 1
+
+    # save the variable AFTER checking the value
+    # (so "I HAS A x ITZ x" correctly says x is not declared)
+    symbols[var_name] = var_type
+
+    return i
+# -----------------------------------------------------
+
+# WAZZUP HELPER
+# -----------------------------------------------------
+# checks every declaration between WAZZUP and BUHBYE
+
+# i starts at WAZZUP
+def wazzup_helper(token, lexeme, i, symbols):
+
+    # move past WAZZUP
+    i += 1
+
+    while i < len(token) and token[i] != 'BUHBYE':
+
+        if token[i] == 'VARDEC':
+            i = vardec_helper(token, lexeme, i, symbols)
+
+        # skip newlines (and anything else, the syntax analyzer already checked it)
+        else:
+            i += 1
+
+    # move past BUHBYE
+    return i + 1
 # -----------------------------------------------------
 
