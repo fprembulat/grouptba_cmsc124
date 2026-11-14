@@ -100,7 +100,7 @@ def vardec_helper(token, i):
 # -----------------------------------------------------
 
 # -----------------------------------------------------
-def comm_helper(token):	
+def comm_helper(token, i):	
     i += 1
 
     while i < len(token):
@@ -211,6 +211,8 @@ def not_helper(token, i):
     return i + 2
 # -----------------------------------------------------
 
+
+
 # INFINITE BOOLEAN HELPER
 # -----------------------------------------------------
 def infinite_boolean_helper(token, i):
@@ -254,6 +256,9 @@ def wazzup_helper(token, i):
             raise SyntaxError("WAZZUP must end with BUHBYE")
         else:
             raise SyntaxError("Only variable declarations are allowed inside WAZZUP")
+    
+    if i >= len(token):
+        raise SyntaxError("WAZZUP must end with BUHBYE")
     
     return i + 1
 # -----------------------------------------------------
@@ -360,3 +365,4 @@ def wtf_helper(token, i):
 
     return i + 1
 # -----------------------------------------------------
+
