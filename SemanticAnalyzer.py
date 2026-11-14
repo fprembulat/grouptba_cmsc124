@@ -6,7 +6,7 @@
 
 # to do this, we keep a dictionary called "symbols"
 #   key   = variable name   (example: 'age')
-#   value = variable type   (example: 'NUM')
+#   value = variable type   (example: 'NUM') 
 
 
 # -----------------------------------------------------
