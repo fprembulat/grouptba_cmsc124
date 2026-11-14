@@ -96,7 +96,7 @@ class App(tk.Tk):
                 token += t
                 lexeme += lex
 
-            syntax(token)
+            syntax(token, lexeme)
             semantic(token, lexeme)
 
             # gets the tokens and lexemes as well as their classification

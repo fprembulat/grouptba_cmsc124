@@ -1,40 +1,111 @@
+
 from SyntaxAnalyzer import syntax
+from LexicalAnalyzer import LexicalAnalyzer
+
+# -----------------------------------------------------
+# WAZZUP TEST CASES
+# -----------------------------------------------------
 
 tests = [
-    # 1. Valid switch with OMG
-    ['START', 'WTF', 'OMG', 'NUM', 'PRINT', 'YARN', 'OIC', 'END'],
+    {
+        "name": "Valid WAZZUP declaration block",
+        "code": """
+HAI
+WAZZUP
+I HAS A name
+I HAS A age
+BUHBYE
+VISIBLE "Hello"
+KTHXBYE
+""",
+        "expected": "Syntax OK"
+    },
 
-    # 2. Valid switch with OMGWTF
-    ['START', 'WTF', 'OMG', 'NUM', 'OMGWTF', 'PRINT', 'YARN', 'OIC', 'END'],
+    {
+        "name": "Missing BUHBYE",
+        "code": """
+HAI
+WAZZUP
+I HAS A name
+KTHXBYE
+""",
+        "expected": "WAZZUP must end with BUHBYE"
+    },
 
-    # 3. Missing OMG
-    ['START', 'WTF', 'OMGWTF', 'OIC', 'END'],
+    {
+        "name": "Invalid statement inside WAZZUP",
+        "code": """
+HAI
+WAZZUP
+VISIBLE "Hello"
+BUHBYE
+KTHXBYE
+""",
+        "expected": "Only variable declarations are allowed inside WAZZUP"
+    },
 
-    # 4. OMG without a value
-    ['START', 'WTF', 'OMG', 'NEWLINE', 'OIC', 'END'],
+    {
+        "name": "Variable declaration outside WAZZUP",
+        "code": """
+HAI
+I HAS A name
+KTHXBYE
+""",
+        "expected": "Variable declarations must be inside WAZZUP"
+    },
 
-    # 5. Duplicate OMGWTF
-    ['START', 'WTF', 'OMG', 'NUM', 'OMGWTF', 'OMGWTF', 'OIC', 'END'],
-
-    # 6. OMG after OMGWTF
-    ['START', 'WTF', 'OMG', 'NUM', 'OMGWTF', 'OMG', 'NUM', 'OIC', 'END'],
-
-    # 7. Missing OIC
-    ['START', 'WTF', 'OMG', 'NUM', 'END'],
-
-    # 8. Invalid statement inside WTF
-    ['START', 'WTF', 'OMG', 'NUM', 'GIMMEH', 'END'],
-
-    # 9. Valid assignment inside OMG
-    ['START', 'WTF', 'OMG', 'NUM', 'VAR', 'R', 'NUM', 'OIC', 'END'],
-
-    # 10. Valid GTFO inside OMG
-    ['START', 'WTF', 'OMG', 'NUM', 'GTFO', 'OIC', 'END']
+    {
+        "name": "WAZZUP after an ordinary statement",
+        "code": """
+HAI
+VISIBLE "Hello"
+WAZZUP
+I HAS A name
+BUHBYE
+KTHXBYE
+""",
+        "expected": "WAZZUP must appear before other statements"
+    }
 ]
 
-for number, test in enumerate(tests, 1):
+# -----------------------------------------------------
+# RUN TESTS
+# -----------------------------------------------------
+
+for test in tests:
+
+    print("\n======================================")
+    print("TEST:", test["name"])
+    print("======================================")
+
     try:
-        syntax(test)
-        print("Test", number, ": Accepted")
-    except SyntaxError as e:
-        print("Test", number, ": Rejected -", e)
+        # Create lexer
+        lexer = LexicalAnalyzer()
+
+        # Tokenize the test program
+        tokens, lexemes = lexer.tokenize(test["code"].strip())
+
+        # Run syntax analyzer
+        syntax(tokens)
+
+        actual = "Syntax OK"
+
+    except SyntaxError as error:
+        actual = str(error)
+
+    # Compare actual and expected results
+    if actual == test["expected"]:
+        print("PASSED")
+    else:
+        print("FAILED")
+
+    print("Expected:", test["expected"])
+    print("Actual:  ", actual)
+
+# -----------------------------------------------------
+# END OF TESTING
+# -----------------------------------------------------
+
+print("\n======================================")
+print("TESTING COMPLETE")
+print("======================================")

@@ -89,6 +89,9 @@ class LexicalAnalyzer:
             # recognize variable identifiers
             ('VAR', r'[a-zA-Z_][a-zA-Z0-9_]*'),
 
+            # recognize plus symbol for visible
+            ('PLUS', r'\+'),
+
             # ignore spaces and tabs
             ('SKIP', r'[ \t]+'),
 
@@ -129,6 +132,9 @@ class LexicalAnalyzer:
 
             if token_type == 'OBTW':
                 is_comment = True
+                continue
+            
+            if token_type == 'BTW':
                 continue
 
             if is_comment:
