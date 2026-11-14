@@ -1,4 +1,4 @@
 HAI
-BTW This is a single-line comment
-VISIBLE "Hello World!"
+    I HAS A name ITZ "Fran"
+    VISIBLE name
 KTHXBYE
