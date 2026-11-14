@@ -21,7 +21,6 @@ class SemanticError(Exception):
 # -----------------------------------------------------
 # MAIN FUNCTION
 # -----------------------------------------------------
-
 def semantic(token, lexeme):
 
     # dictionary that stores declared variables and their types
@@ -119,7 +118,19 @@ def vardec_helper(token, lexeme, i, symbols):
             var_type = get_operand_type(token, lexeme, i + 1, symbols)
             i += 2
 
-        # expressions (SUM OF, BOTH SAEM, BOTH OF, ...) will be added in the next bits
+        # arithmetic after ITZ (SUM OF a AN b)
+        elif token[i + 1] in ('SUM', 'DIFF', 'PRODUKT', 'QUOSHUNT', 'MOD', 'BIGGR', 'SMALLR'):
+            var_type = arithmetic_helper(token, lexeme, i + 1, symbols)
+            # move past: ITZ, operator, first value, AN, second value
+            i += 5
+
+        # comparison after ITZ (BOTH SAEM a AN b)
+        elif token[i + 1] in ('BOTHSAEM', 'DIFFRINT'):
+            var_type = comparison_helper(token, lexeme, i + 1, symbols)
+            # move past: ITZ, operator, first value, AN, second value
+            i += 5
+
+        # other expressions (BOTH OF, NOT, ...) will be added in the next bits
         # for now, just move past ITZ
         else:
             i += 1
@@ -133,9 +144,6 @@ def vardec_helper(token, lexeme, i, symbols):
 
 # WAZZUP HELPER
 # -----------------------------------------------------
-# checks every declaration between WAZZUP and BUHBYE
-
-# i starts at WAZZUP
 def wazzup_helper(token, lexeme, i, symbols):
 
     # move past WAZZUP
@@ -156,12 +164,6 @@ def wazzup_helper(token, lexeme, i, symbols):
 
 # ASSIGNMENT HELPER
 # -----------------------------------------------------
-# checks an assignment like:  age R 21
-#   1. the variable on the left must already be declared
-#   2. if the value on the right is a variable, it must be declared too
-# then the variable takes the type of the new value
-
-# i starts at the variable on the left
 def assign_helper(token, lexeme, i, symbols):
 
     var_name = lexeme[i]
@@ -181,10 +183,6 @@ def assign_helper(token, lexeme, i, symbols):
 
 # PRINT HELPER
 # -----------------------------------------------------
-# checks VISIBLE name "hi" age
-# every variable being printed must be declared
-
-# i starts at PRINT (VISIBLE)
 def print_helper(token, lexeme, i, symbols):
 
     # move past VISIBLE
@@ -202,11 +200,6 @@ def print_helper(token, lexeme, i, symbols):
 
 # INPUT HELPER
 # -----------------------------------------------------
-# checks GIMMEH name
-#   the variable must be declared
-#   after input, the variable holds a YARN (user input is always text)
-
-# i starts at GIMMEH
 def input_helper(token, lexeme, i, symbols):
 
     var_name = lexeme[i + 1]
@@ -219,5 +212,55 @@ def input_helper(token, lexeme, i, symbols):
 
     # move past: GIMMEH, variable
     return i + 2
+# -----------------------------------------------------
+
+# ARITHMETIC HELPER
+# -----------------------------------------------------
+def arithmetic_helper(token, lexeme, i, symbols):
+
+    operator = lexeme[i]
+
+    # the values are at i + 1 and i + 3 (i + 2 is AN)
+    first_type = get_operand_type(token, lexeme, i + 1, symbols)
+    second_type = get_operand_type(token, lexeme, i + 3, symbols)
+
+    # check the first value
+    if first_type not in ('NUM', 'NUMBAR', 'YARN'):
+        raise SemanticError(operator + " cannot use a " + first_type + " value (" + lexeme[i + 1] + ")")
+
+    # check the second value
+    if second_type not in ('NUM', 'NUMBAR', 'YARN'):
+        raise SemanticError(operator + " cannot use a " + second_type + " value (" + lexeme[i + 3] + ")")
+
+    # decide the type of the answer
+    if first_type == 'NUMBAR' or second_type == 'NUMBAR':
+        return 'NUMBAR'
+    else:
+        return 'NUM'
+# -----------------------------------------------------
+
+# COMPARISON HELPER
+# -----------------------------------------------------
+# checks BOTH SAEM a AN b and DIFFRINT a AN b
+#   both values must be numbers or YARN (same rule as arithmetic)
+#   the answer of a comparison is always WIN or FAIL, so it gives back TROOF
+def comparison_helper(token, lexeme, i, symbols):
+
+    operator = lexeme[i]
+
+    # the values are at i + 1 and i + 3 (i + 2 is AN)
+    first_type = get_operand_type(token, lexeme, i + 1, symbols)
+    second_type = get_operand_type(token, lexeme, i + 3, symbols)
+
+    # check the first value
+    if first_type not in ('NUM', 'NUMBAR', 'YARN'):
+        raise SemanticError(operator + " cannot use a " + first_type + " value (" + lexeme[i + 1] + ")")
+
+    # check the second value
+    if second_type not in ('NUM', 'NUMBAR', 'YARN'):
+        raise SemanticError(operator + " cannot use a " + second_type + " value (" + lexeme[i + 3] + ")")
+
+    # a comparison always answers WIN or FAIL
+    return 'TROOF'
 # -----------------------------------------------------
 
