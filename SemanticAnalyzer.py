@@ -46,6 +46,25 @@ def semantic(token, lexeme):
         elif token[i] == 'VARDEC':
             i = vardec_helper(token, lexeme, i, symbols)
 
+        # output statement
+        elif token[i] == 'PRINT':
+            i = print_helper(token, lexeme, i, symbols)
+
+        # input statement
+        elif token[i] == 'GIMMEH':
+            i = input_helper(token, lexeme, i, symbols)
+
+        # variable at the start of a line
+        elif token[i] == 'VAR':
+            # assignment (x R 5)
+            if i + 1 < len(token) and token[i + 1] == 'R':
+                i = assign_helper(token, lexeme, i, symbols)
+
+            # variable alone on a line, just make sure it exists
+            else:
+                get_operand_type(token, lexeme, i, symbols)
+                i += 1
+
         # other statements will be added here in the next bits
         # for now, just move to the next token
         else:
@@ -133,5 +152,72 @@ def wazzup_helper(token, lexeme, i, symbols):
 
     # move past BUHBYE
     return i + 1
+# -----------------------------------------------------
+
+# ASSIGNMENT HELPER
+# -----------------------------------------------------
+# checks an assignment like:  age R 21
+#   1. the variable on the left must already be declared
+#   2. if the value on the right is a variable, it must be declared too
+# then the variable takes the type of the new value
+
+# i starts at the variable on the left
+def assign_helper(token, lexeme, i, symbols):
+
+    var_name = lexeme[i]
+
+    # rule 1: left side must be declared
+    get_operand_type(token, lexeme, i, symbols)
+
+    # rule 2: right side (comes after R) is checked inside get_operand_type
+    new_type = get_operand_type(token, lexeme, i + 2, symbols)
+
+    # update the type of the variable
+    symbols[var_name] = new_type
+
+    # move past: variable, R, value
+    return i + 3
+# -----------------------------------------------------
+
+# PRINT HELPER
+# -----------------------------------------------------
+# checks VISIBLE name "hi" age
+# every variable being printed must be declared
+
+# i starts at PRINT (VISIBLE)
+def print_helper(token, lexeme, i, symbols):
+
+    # move past VISIBLE
+    i += 1
+
+    while i < len(token) and token[i] in ('VAR', 'NUM', 'NUMBAR', 'YARN', 'TROOF', 'NOOB'):
+
+        if token[i] == 'VAR':
+            get_operand_type(token, lexeme, i, symbols)
+
+        i += 1
+
+    return i
+# -----------------------------------------------------
+
+# INPUT HELPER
+# -----------------------------------------------------
+# checks GIMMEH name
+#   the variable must be declared
+#   after input, the variable holds a YARN (user input is always text)
+
+# i starts at GIMMEH
+def input_helper(token, lexeme, i, symbols):
+
+    var_name = lexeme[i + 1]
+
+    # variable must be declared
+    get_operand_type(token, lexeme, i + 1, symbols)
+
+    # user input is text
+    symbols[var_name] = 'YARN'
+
+    # move past: GIMMEH, variable
+    return i + 2
 # -----------------------------------------------------
 
