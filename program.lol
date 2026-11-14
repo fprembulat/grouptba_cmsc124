@@ -1,8 +1,4 @@
 HAI
-    WAZZUP
-        I HAS A name ITZ "Francine"
-        I HAS A age ITZ 20
-    BUHBYE
-
-    VISIBLE "Hello"
+    I HAS A name ITZ "Fran"
+    VISIBLE SMOOSH "Hello " AN name MKAY
 KTHXBYE
