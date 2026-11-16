@@ -1,5 +1,6 @@
 # for lexeme classification
 
+# todo: lexeme table kulang pa {OMG, SMOOSH}
 class LexemeTable:
     def __init__(self):
         self.classifications = {
@@ -9,7 +10,7 @@ class LexemeTable:
             'VAR': 'Variable Identifier',
             'ASSIGN': 'Variable Assignment',
             'NUM': 'Literal',
-            'NUUMBAR': 'Literal',
+            'NUMBAR': 'Literal',
             'YARN': 'Literal',
             'YARN': 'Literal',
             'TROOF': 'Literal',

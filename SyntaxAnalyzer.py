@@ -5,6 +5,8 @@
 # -----------------------------------------------------
 
 def syntax(token, lexeme):
+    print(token)
+    print(lexeme)
 
     # -----------------------------------------------------
     # check if program starts with HAI

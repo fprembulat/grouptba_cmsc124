@@ -25,6 +25,8 @@ class SymbolTable:
                 
                 self.symbols[name] = value
 
+            # todo: token[i] = 'VISIBLE':
+
             i += 1 # increment
         
         return self.symbols
