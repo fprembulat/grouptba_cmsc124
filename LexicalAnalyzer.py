@@ -33,7 +33,6 @@ class LexicalAnalyzer:
             ('BIGGR', r'BIGGR OF\b'),
             ('BOTHOF', r'BOTH OF\b'),
             ('EITHER', r'EITHER OF\b'),
-            ('NOTOF', r'NOT OF\b'),
             ('NOT', r'NOT\b'),
             ('WONOF', r'WON OF\b'),
             ('ANYOF', r'ANY OF\b'),
