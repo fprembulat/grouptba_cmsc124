@@ -29,6 +29,7 @@ class App(tk.Tk):
         bar = ttk.Frame(self, padding=6)
         bar.grid(row=0, column=0, sticky="ew")
         ttk.Label(bar, text="program.lol").pack(side="left")
+        ttk.Button(bar, text="Run", command=self.analyze).pack(side="left", padx=(16, 0))
         self.status = ttk.Label(bar, text="")
         self.status.pack(side="left", padx=16)
 
@@ -79,6 +80,7 @@ class App(tk.Tk):
     # does the main work of the program
     def analyze(self):
         self.clear_tables()
+        self.status.config(text="")
 
         # objects
         buffer = Buffer()
@@ -90,7 +92,9 @@ class App(tk.Tk):
         lexeme = []
 
         try:
-            for code in buffer.load_buffer():
+            # the code now comes from the text editor (rstrip so a trailing newline
+            # does not become a NEWLINE token after KTHXBYE)
+            for code in [self.editor.get("1.0", "end-1c").rstrip()]:
                 t, lex = analyzer.tokenize(code)  # tokenize the code
                 token += t
                 lexeme += lex
