@@ -7,6 +7,7 @@ from LexicalAnalyzer import LexicalAnalyzer
 from SymbolTable import SymbolTable
 from LexemeTable import LexemeTable
 from SyntaxAnalyzer import syntax
+from SemanticAnalyzer import semantic, SemanticError
 
 
 class App(tk.Tk):
@@ -99,7 +100,8 @@ class App(tk.Tk):
                 token += t
                 lexeme += lex
 
-            syntax(token)
+            syntax(token, lexeme)
+            semantic(token, lexeme)
 
             # gets the tokens and lexemes as well as their classification
             for lex, tok in zip(lexeme, token):
@@ -116,6 +118,9 @@ class App(tk.Tk):
         except SyntaxError as e:
             self.status.config(text="SyntaxError")
             messagebox.showerror("SyntaxError", str(e))
+        except SemanticError as e:
+            self.status.config(text="SemanticError")
+            messagebox.showerror("SemanticError", str(e))
 
 
 if __name__ == "__main__":

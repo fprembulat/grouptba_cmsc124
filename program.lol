@@ -1,4 +1,3 @@
 HAI
-    I HAS A name ITZ "Fran"
-    VISIBLE name
+VISIBLE "HELLO" "WORLD"
 KTHXBYE
