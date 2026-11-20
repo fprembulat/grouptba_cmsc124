@@ -651,11 +651,6 @@ def loop_helper(token, lexeme, i):
 
     i += 1
 
-    if i >= len(token) or token[i] not in ('TIL', 'WILE'):
-        raise SyntaxError("Loop must contain TIL or WILE")
-    
-    i += 1
-
     if i >= len(token) or token[i] == 'NEWLINE':
         raise SyntaxError("Loop must have a condition")
     
