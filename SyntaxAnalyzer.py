@@ -13,9 +13,13 @@ def syntax(token, lexeme):
     if not token or token[0] != 'START':
         raise SyntaxError('must start with HAI')
 
+    while token[-1] == 'NEWLINE':
+        token.pop()
+
     # check if program ends with KTHXBYE
     if token[-1] != 'END':
         raise SyntaxError('must end with KTHXBYE')
+
     # -----------------------------------------------------
 
     # start after HAI
