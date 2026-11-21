@@ -114,32 +114,9 @@ class LexicalAnalyzer:
         token = []
         lexeme = []
 
-        # track the current line and column
-
-        # track the current line
-        line_no = 1
-        line_start = 0
-        # check if comment
-        is_comment = False
-
         for match in self.regex.finditer(code):
-
             token_type = match.lastgroup
             value = match.group()
-
-            position = match.end()
-
-            if token_type == 'OBTW':
-                is_comment = True
-                continue
-            
-            if token_type == 'BTW':
-                continue
-
-            if is_comment:
-                if token_type == 'TLDR':
-                    is_comment = False
-                continue
 
             if token_type == 'SKIP':
                 continue
@@ -149,24 +126,11 @@ class LexicalAnalyzer:
                 lexeme.append('\\n')
                 continue
 
-            if token_type == 'BTW':
-                next_nl = code.find('\n', position)
-
-                if next_nl == 1:
-                    break
-
-                position = next_nl + 1
-                continue
-
             if token_type == 'MISMATCH':
-                print("Lexical Error")
+                print('Lexical Error')
                 continue
 
             token.append(token_type)
             lexeme.append(value)
-        if is_comment:
-            raise SyntaxError("OBTW must be closed with TLDR")
-
-        return token, lexeme
-
             
+        return token, lexeme

@@ -5,8 +5,7 @@
 # -----------------------------------------------------
 
 def syntax(token, lexeme):
-    print(token)
-    print(lexeme)
+    token, lexeme = remove_sline_comm(token, lexeme)
 
     # -----------------------------------------------------
     # check if program starts with HAI
@@ -94,7 +93,8 @@ def syntax(token, lexeme):
 
         # multiline comment
         elif token[i] == 'OBTW':
-            i = comm_helper(token, i)
+            token, lexeme = comm_helper(token, lexeme, i)
+            continue
 
         # unexpected token
         else:
@@ -104,6 +104,22 @@ def syntax(token, lexeme):
 # -----------------------------------------------------
 # HELPER FUNCTIONS
 # -----------------------------------------------------
+
+# -----------------------------------------------------
+# COMMENT REMOVER HELPER
+# -----------------------------------------------------
+def remove_sline_comm(token, lexeme):
+    i = 0
+
+    while i < len(token):
+        if token[i] == 'BTW':
+            while i < len(token) and token[i] != 'NEWLINE':
+                token.pop(i)
+                lexeme.pop(i)
+        else:
+            i += 1
+
+    return token, lexeme
 
 # VARDEC HELPER
 # -----------------------------------------------------
@@ -142,16 +158,30 @@ def vardec_helper(token, i):
 # -----------------------------------------------------
 
 # -----------------------------------------------------
-def comm_helper(token, i):	
-    i += 1
+def comm_helper(token, lexeme, i):	
+    if i > 0 and token[i - 1] != 'NEWLINE':
+        raise SyntaxError("OBTW must be on its own line")
+    
+    if i + 1 < len(token) and token[i + 1] != 'NEWLINE':
+        raise SyntaxError("OBTW must be on its own line")
 
-    while i < len(token):
-        if token[i] == 'TLDR':
-            return i + 1
+    j = i + 1
+    while j < len(token) and token[j] != 'TLDR':
+        j += 1
 
-        i += 1
+    if j >= len(token):
+        raise SyntaxError("OBTW must be closed with TLDR")
 
-    raise SyntaxError("OBTW must be closed with TLDR")
+    if j > 0 and token[j - 1] != 'NEWLINE':
+        raise SyntaxError("TLDR must be on its own line")
+    
+    if j + 1 < len(token) and token[j + 1] != 'NEWLINE':
+        raise SyntaxError("TLDR must be on its own line")
+
+    del token[i:j + 1]
+    del lexeme[i:j + 1]
+
+    return token, lexeme
 # -----------------------------------------------------
 
 # -----------------------------------------------------
