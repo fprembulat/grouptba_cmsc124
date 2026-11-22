@@ -206,6 +206,13 @@ def assign_helper(token, lexeme, i, symbols):
     # rule 1: left side must be declared
     get_operand_type(token, lexeme, i, symbols)
 
+    # handles function calls on the right side of R
+    if token[i + 2] == 'IIZ':
+        symbols[var_name] = 'NOOB'
+        while i < len(token) and token[i] != 'MKAY':
+            i += 1
+        return i + 1
+
     # rule 2: right side (comes after R) is checked inside get_operand_type
     new_type = get_operand_type(token, lexeme, i + 2, symbols)
 
