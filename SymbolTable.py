@@ -53,4 +53,131 @@ class SymbolTable:
             print("{:20}{}".format(name,value))
 
 
+    # a list like [('add(3, 4)', '7')]
+    def function_calls(self, token, lexeme):
+        functions = {}      # name, parameters
+        results = []
 
+        i = 0
+        # first pass which remembers every function
+        while i < len(token):
+            if token[i] == 'HOWIZI':
+                name = lexeme[i + 1]
+                functions[name] = [[], None]
+                i += 2
+                while token[i] != 'NEWLINE':
+                    if token[i] == 'VAR':
+                        functions[name][0].append(lexeme[i])
+                    i += 1
+                while token[i] != 'IFUSAYSO':
+                    if token[i] == 'FOUNDYR' and functions[name][1] is None:
+                        functions[name][1] = i + 1
+                    i += 1
+            i += 1
+
+        # second pass where we run all the function calls
+        i = 0
+        while i < len(token):
+            if token[i] == 'IIZ':
+                name = lexeme[i + 1]
+                args = []
+                i += 2
+                while token[i] != 'MKAY':
+                    if token[i] == 'YR':
+                        args.append(self.expression(token, lexeme, i + 1, None))
+                    i += 1
+
+                if name not in functions:
+                    raise SyntaxError("Function " + name + " is not defined")
+                params, found = functions[name]
+                if len(args) != len(params):
+                    raise SyntaxError("Function " + name + " needs " + str(len(params)) + " argument(s) but got " + str(len(args)))
+
+                value = None
+                if found is not None:
+                    value = self.expression(token, lexeme, found, dict(zip(params, args)))
+
+                label = name + "(" +  ", ".join(self.show(a) for a in args) + ")"
+                results.append((label, self.show(value)))
+            i += 1
+
+        return results
+
+    # a single vaue, or OP a AN b
+    def expression(self, token, lexeme, j, scope):
+        if token[j] not in ('SUM', 'DIFF', 'PRODUKT', 'QUOSHUNT', 'MOD', 'BIGGR', 'SMALLR'):
+            return self.operand(token, lexeme, j, scope)
+
+        op = token[j]
+        a = self.operand(token, lexeme, j + 1, scope)
+        b = self.operand(token, lexeme, j + 3, scope)
+
+        if type(a) not in (int, float) or type(b) not in (int, float):
+            raise SyntaxError(lexeme[j] + " needs two number operands")
+
+        if op == 'SUM':
+            return a + b
+        if op == 'DIFF':
+            return a - b
+        if op == 'PRODUKT':
+            return a * b
+        if op == 'BIGGR':
+            return max(a, b)
+        if op == 'SMALLR':
+            return min(a, b)
+
+        if b == 0:
+            raise SyntaxError(lexeme[j] + " cannot divide by zero")
+        if op == 'QUOSHUNT':
+            if type(a) is int and type(b) is int:
+                return int(a/b)
+            else:
+                return a/b
+
+        return a % b
+
+    # one literal, a parameter or a variable
+    def operand(self, token, lexeme, j, scope):
+        if token[j] == 'NUM':
+            return int(lexeme[j])
+        if token[j] == 'NUMBAR':
+            return float(lexeme[j])
+        if token[j] == 'YARN':
+            return lexeme[j].strip('"')
+        if token[j] == 'TROOF':
+            return lexeme[j] == 'WIN'
+        if token[j] == 'VAR':
+            name = lexeme[j]
+            if scope is None:                   # if in a calll, we use the symbol table
+                return self.to_value(self.symbols.get(name, 'NOOB'))    
+            if name not in scope:               # else if in a function, only its parameters exist
+                raise SyntaxError("Variable " + name + " is not a parameter of this function")
+            return scope[name]
+
+        return None
+
+
+    # the symbol table keeps values as text so we turn them into values
+    def to_value(self, raw):
+        if raw.startswith('"'):
+            return raw.strip('"')
+        if raw in ('WIN', 'FAIL'):
+            return raw == 'WIN'
+        try:
+            return int(raw)
+        except ValueError:
+            pass
+        try:
+            return float(raw)
+        except ValueError:
+            return None
+
+    # how the value is shown in the tbale
+    def show(self, value):
+        if value is None:
+            return 'NOOB'
+        if value is True:
+            return 'WIN'
+        if value is False:
+            return 'FAIL'
+        return str(value)

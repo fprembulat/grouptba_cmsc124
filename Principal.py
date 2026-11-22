@@ -115,6 +115,9 @@ class App(tk.Tk):
             for name, value in symbol_table.build(token, lexeme).items():
                 self.symbol_tree.insert("", "end", values=(name, value))
 
+            for label, value in symbol_table.function_calls(token, lexeme):
+                self.symbol_tree.insert("", "end", values=(label, value))
+
         except SyntaxError as e:
             self.status.config(text="SyntaxError")
             messagebox.showerror("SyntaxError", str(e))

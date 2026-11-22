@@ -61,6 +61,18 @@ def semantic(token, lexeme):
         elif token[i] == 'GIMMEH':
             i = input_helper(token, lexeme, i, symbols)
 
+        # function definition skipped first
+        elif token[i] == 'HOWIZI':
+            while token[i] != 'IFUSAYSO':
+                i += 1
+            i += 1
+
+        # function calls are skipped
+        elif token[i] == 'IIZ':
+            while token[i] != 'MKAY':
+                i += 1
+            i += 1
+
         # variable at the start of a line
         elif token[i] == 'VAR':
             # assignment (x R 5)
