@@ -8,16 +8,19 @@ def syntax(token, lexeme):
     token, lexeme = remove_sline_comm(token, lexeme)
 
     # -----------------------------------------------------
-    # check if program starts with HAI
-    if not token or token[0] != 'START':
-        raise SyntaxError('must start with HAI')
+    while token and token[0] == 'NEWLINE':
+        token.pop(0)
+        lexeme.pop(0)
 
-    while token[-1] == 'NEWLINE':
+    if not token or token[0] !='START':
+        raise SyntaxError("Program must start with HAI")
+
+    while token and token[-1] == 'NEWLINE':
         token.pop()
-
-    # check if program ends with KTHXBYE
-    if token[-1] != 'END':
-        raise SyntaxError('must end with KTHXBYE')
+        lexeme.pop()
+        
+    if not token or token[-1] != 'END':
+        raise SyntaxError("Program must end with KTHXBYE")
 
     # -----------------------------------------------------
 
