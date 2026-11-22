@@ -1,6 +1,7 @@
 # THIS IS THE MAIN FILE
+import os
 import tkinter as tk
-from tkinter import ttk, scrolledtext
+from tkinter import ttk, scrolledtext, filedialog
 
 from Buffer import Buffer
 from SemanticAnalyzer import SemanticError
@@ -29,10 +30,31 @@ class App(tk.Tk):
     def build_toolbar(self):
         bar = ttk.Frame(self, padding=6)
         bar.grid(row=0, column=0, sticky="ew")
-        ttk.Label(bar, text="program.lol").pack(side="left")
+        ttk.Button(bar, text="Open...", command=self.open_file).pack(side="left")
+        self.file_label = ttk.Label(bar, text="program.lol")
+        self.file_label.pack(side="left", padx=(8, 0))
         ttk.Button(bar, text="Run", command=self.analyze).pack(side="left", padx=(16, 0))
         self.status = ttk.Label(bar, text="")
         self.status.pack(side="left", padx=16)
+
+    def open_file(self):
+        # lets the user pick a .lol file and loads it into the text editor (Run is still pressed manually)
+        if self.running:        # a program is still waiting for input
+            return
+        path = filedialog.askopenfilename(
+            title="Select a LOLCODE file",
+            filetypes=[("LOLCode files", "*.lol")],
+        )
+        if not path:            # the dialog was cancelled
+            return
+        with open(path, "r", encoding="utf-8") as file:
+            code = file.read()
+        self.editor.delete("1.0", "end")
+        self.editor.insert("1.0", code)
+        self.file_label.config(text=os.path.basename(path))
+        self.clear_tables()
+        self.clear_console()
+        self.status.config(text="")
 
     def build_tables(self):
         panes = ttk.PanedWindow(self, orient="horizontal")
