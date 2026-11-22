@@ -84,7 +84,7 @@ def statement_helper(token, lexeme, i, symbols, functions):
             i += 1
         return i + 1
 
-    # variable declaration block
+    # variable declaration block 
     elif token[i] == 'WAZZUP':
         return wazzup_helper(token, lexeme, i, symbols, functions)
 
