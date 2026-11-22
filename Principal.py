@@ -1,6 +1,6 @@
 # THIS IS THE MAIN FILE
 import tkinter as tk
-from tkinter import ttk, messagebox, scrolledtext
+from tkinter import ttk, scrolledtext
 
 from Buffer import Buffer
 from SemanticAnalyzer import SemanticError
@@ -165,10 +165,10 @@ class App(tk.Tk):
 
         except SyntaxError as e:
             self.status.config(text="SyntaxError")
-            messagebox.showerror("SyntaxError", str(e))
+            self.write_console("SyntaxError: " + str(e) + "\n")
         except SemanticError as e:
             self.status.config(text="SemanticError")
-            messagebox.showerror("SemanticError", str(e))
+            self.write_console("SemanticError: " + str(e) + "\n")
         except InterpreterError as e:
             self.write_console("\nRuntimeError: " + str(e) + "\n")
             self.status.config(text="RuntimeError")
