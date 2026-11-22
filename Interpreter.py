@@ -104,10 +104,15 @@ class Parser:
 
     # ----- program and blocks -----
     def parse_program(self):
-        self.skip_newlines()
-        self.expect('START', "The program must start with HAI")
-
         statements = []
+        self.skip_newlines()
+
+        # functions may be defined before HAI
+        while self.peek() == 'HOWIZI':
+            statements.append(self.parse_function())
+            self.skip_newlines()
+
+        self.expect('START', "The program must start with HAI")
         self.skip_newlines()
 
         if self.peek() == 'WAZZUP':
@@ -117,6 +122,13 @@ class Parser:
 
         statements += self.parse_block({'END'})
         self.expect('END', "The program must end with KTHXBYE")
+
+        # functions may also be defined after KTHXBYE
+        self.skip_newlines()
+        while self.peek() == 'HOWIZI':
+            statements.append(self.parse_function())
+            self.skip_newlines()
+
         return statements
 
     def parse_block(self, stop):

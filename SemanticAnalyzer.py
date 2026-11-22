@@ -53,12 +53,12 @@ def semantic(token, lexeme):
     # dictionary that stores defined functions
     functions = {}
 
-    # start after HAI
-    i = 1
+    # start from the first token (functions may appear before HAI)
+    i = 0
 
     # -----------------------------------------------------
-    # loop through all tokens until KTHXBYE
-    while i < len(token) - 1:
+    # loop through all tokens
+    while i < len(token):
         i = statement_helper(token, lexeme, i, symbols, functions)
     # -----------------------------------------------------
 
@@ -74,8 +74,8 @@ def semantic(token, lexeme):
 # checks one statement starting at index i and gives back the next index
 def statement_helper(token, lexeme, i, symbols, functions):
 
-    # skip newlines and single-line comments
-    if token[i] in ('NEWLINE', 'BTW'):
+    # skip newlines, single-line comments, and program delimiters (HAI / KTHXBYE)
+    if token[i] in ('NEWLINE', 'BTW', 'START', 'END'):
         return i + 1
 
     # skip multiline comments if still present
