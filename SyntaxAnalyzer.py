@@ -6,15 +6,22 @@
 
 def syntax(token, lexeme):
     token, lexeme = remove_sline_comm(token, lexeme)
+    i = 0
 
     # -----------------------------------------------------
     while token and token[0] == 'NEWLINE':
         token.pop(0)
         lexeme.pop(0)
 
-    if not token or token[0] !='START':
-        raise SyntaxError("Program must start with HAI")
+    while i < len(token) and token[i] == 'HOWIZI':
+        i = function_helper(token, i)
 
+        while i < len(token) and token[i] == 'NEWLINE':
+            i += 1
+
+    if i >= len(token) or token[i] != 'START':
+        raise SyntaxError("Program must start with HAI")
+        
     while token and token[-1] == 'NEWLINE':
         token.pop()
         lexeme.pop()
@@ -25,7 +32,7 @@ def syntax(token, lexeme):
     # -----------------------------------------------------
 
     # start after HAI
-    i = 1
+    i += 1
 
     # -----------------------------------------------------
     # loop through all tokens until KTHXBYE
