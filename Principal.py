@@ -1,13 +1,9 @@
 # THIS IS THE MAIN FILE
 import tkinter as tk
-from tkinter import ttk, messagebox, scrolledtext
+from tkinter import ttk, scrolledtext
 
 from Buffer import Buffer
-from LexicalAnalyzer import LexicalAnalyzer
-from SymbolTable import SymbolTable
-from LexemeTable import LexemeTable
-from SyntaxAnalyzer import syntax
-from SemanticAnalyzer import semantic, SemanticError
+from SemanticAnalyzer import SemanticError
 from Interpreter import Interpreter, InterpreterError
 
 
@@ -19,6 +15,8 @@ class App(tk.Tk):
         self.rowconfigure(1, weight=3)
         self.rowconfigure(2, weight=1)
         self.columnconfigure(0, weight=1)
+
+        self.symbol_rows = {}       # identifier -> row id in the symbol table
 
         self.build_toolbar()
         self.build_tables()
@@ -68,17 +66,22 @@ class App(tk.Tk):
         return tree
 
     # helper functions
-    def not_ready(self, name):
-        messagebox.showinfo(name, f"{name} is not implemented yet.")
-
     def clear_tables(self):
         for tree in (self.token_tree, self.symbol_tree):
             tree.delete(*tree.get_children())
+        self.symbol_rows = {}
 
     def load_editor(self):
         # shows the contents of program.lol in the text editor
         for code in Buffer().load_buffer():
             self.editor.insert("1.0", code)
+
+    # symbol table: the interpreter calls this every time a variable changes
+    def update_symbol(self, name, value):
+        if name in self.symbol_rows:
+            self.symbol_tree.item(self.symbol_rows[name], values=(name, value))
+        else:
+            self.symbol_rows[name] = self.symbol_tree.insert("", "end", values=(name, value))
 
     # console: shows the output of the program and takes input for GIMMEH
     def build_console(self):
@@ -130,18 +133,6 @@ class App(tk.Tk):
         self.write_console(text + "\n")
         return text
 
-    def run_program(self, token, lexeme):
-        # runs the program with the interpreter (it stores the functions of the program)
-        self.running = True
-        self.interpreter = Interpreter(self.write_console, self.read_input)
-        try:
-            self.interpreter.run(token, lexeme)
-        except InterpreterError as e:
-            self.write_console("\nRuntimeError: " + str(e) + "\n")
-            self.status.config(text="RuntimeError")
-        finally:
-            self.running = False
-
     # does the main work of the program
     def analyze(self):
         if self.running:        # a program is still waiting for input
@@ -150,47 +141,37 @@ class App(tk.Tk):
         self.clear_console()
         self.status.config(text="")
 
-        # objects
-        buffer = Buffer()
-        analyzer = LexicalAnalyzer()
-        symbol_table = SymbolTable()
-        lexeme_table = LexemeTable()
+        # the code comes from the text editor
+        code = self.editor.get("1.0", "end-1c").rstrip()
 
-        token = []
-        lexeme = []
+        # the interpreter owns the lexical analyzer, syntax/semantic analyzers,
+        # lexeme table and symbol table; the GUI only gives it the console and the table callback
+        self.interpreter = Interpreter(self.write_console, self.read_input, self.update_symbol)
 
         try:
-            # the code now comes from the text editor (rstrip so a trailing newline
-            # does not become a NEWLINE token after KTHXBYE)
-            for code in [self.editor.get("1.0", "end-1c").rstrip()]:
-                t, lex = analyzer.tokenize(code)  # tokenize the code
-                token += t
-                lexeme += lex
+            # lexical + syntax + semantic analysis
+            rows = self.interpreter.analyze(code)
 
-            syntax(token, lexeme)
-            semantic(token, lexeme)
-
-            # gets the tokens and lexemes as well as their classification
-            for lex, tok in zip(lexeme, token):
-                if tok == "NEWLINE":
-                    cls = "Line Break"
-                else:
-                    cls = lexeme_table.classifications.get(tok, "Keyword")
+            # tokens, lexemes and their classification
+            for lex, tok, cls in rows:
                 self.token_tree.insert("", "end", values=(lex, tok, cls))
 
-            # symbol table: {identifier: value}
-            for name, value in symbol_table.build(token, lexeme).items():
-                self.symbol_tree.insert("", "end", values=(name, value))
-
-            # run the program (its output goes to the console)
-            self.run_program(token, lexeme)
+            # run the program: output -> console, variables -> symbol table (updated live)
+            self.running = True
+            try:
+                self.interpreter.execute()
+            finally:
+                self.running = False
 
         except SyntaxError as e:
             self.status.config(text="SyntaxError")
-            messagebox.showerror("SyntaxError", str(e))
+            self.write_console("SyntaxError: " + str(e) + "\n")
         except SemanticError as e:
             self.status.config(text="SemanticError")
-            messagebox.showerror("SemanticError", str(e))
+            self.write_console("SemanticError: " + str(e) + "\n")
+        except InterpreterError as e:
+            self.write_console("\nRuntimeError: " + str(e) + "\n")
+            self.status.config(text="RuntimeError")
 
 
 if __name__ == "__main__":

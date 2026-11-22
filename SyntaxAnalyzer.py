@@ -275,6 +275,9 @@ def assign_helper(token, i):
     elif token[i] == 'NOT':
         return not_helper(token, i)
 
+    elif token[i] == 'IIZ':
+        return function_call_helper(token, i)
+
     elif token[i] in ('VAR', 'NUM', 'NUMBAR', 'YARN', 'TROOF', 'NOOB'):
         return i + 1
 
