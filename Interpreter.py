@@ -1,11 +1,20 @@
-# THE INTERPRETER RUNS A PROGRAM AFTER IT PASSED THE SYNTAX AND SEMANTIC ANALYZERS
+# THE INTERPRETER: runs the whole pipeline and then runs the program
+
+# It also runs in a plain terminal:   python Interpreter.py program.lol
 
 import math
 import re
+import sys
 from decimal import Decimal, ROUND_DOWN, InvalidOperation
 
-NUMBAR_DECIMALS = 2         # a NUMBAR is shown with this many decimals (truncated, not rounded)
-MAX_STEPS = 1_000_000       # stops runaway programs (like a loop that never ends)
+from LexicalAnalyzer import LexicalAnalyzer
+from SyntaxAnalyzer import syntax
+from SemanticAnalyzer import semantic, SemanticError
+from SymbolTable import SymbolTable
+from LexemeTable import LexemeTable
+
+NUMBAR_DECIMALS = 2         # a NUMBAR becomes a YARN with at most this many decimals (truncated)
+MAX_STEPS = 1_000_000       # stops runaway programs (a loop that never ends)
 MAX_DEPTH = 200             # stops runaway recursion
 
 
@@ -36,7 +45,7 @@ ARITHMETIC = {'SUM', 'DIFF', 'PRODUKT', 'QUOSHUNT', 'MOD', 'BIGGR', 'SMALLR'}
 COMPARISON = {'BOTHSAEM', 'DIFFRINT'}
 BOOLEAN = {'BOTHOF', 'EITHER', 'WONOF'}
 EXPRESSION_START = (LITERALS | ARITHMETIC | COMPARISON | BOOLEAN |
-                    {'VAR', 'NOT', 'NOTOF', 'ANYOF', 'ALLOF', 'SMOOSH', 'MAEK', 'IIZ'})
+                    {'VAR', 'NOT', 'ANYOF', 'ALLOF', 'SMOOSH', 'MAEK', 'IIZ'})
 
 NUMBER_PATTERN = re.compile(r'^-?[0-9]+(\.[0-9]+)?$')
 
@@ -56,6 +65,8 @@ DEFAULT_VALUES = {'TROOF': False, 'NUMBR': 0, 'NUMBAR': 0.0, 'YARN': '', 'NOOB':
 #                 ('gimmeh', name)               ('assign', name, expr)
 #                 ('cast', name, type)           ('expr', expr)
 #                 ('orly', yes, [(cond, block)], no)
+#                 ('wtf', [(value, block)], default)
+#                 ('loop', label, op, var, TIL|WILE|None, cond, body)
 #                 ('func', name, [params], body) ('return', expr)   ('gtfo',)
 class Parser:
 
@@ -134,9 +145,9 @@ class Parser:
         if t == 'ORLY':
             return self.parse_orly()
         if t == 'WTF':
-            raise InterpreterError("Switch-case (WTF?) is not implemented yet")
+            return self.parse_wtf()
         if t == 'IMINYR':
-            raise InterpreterError("Loops (IM IN YR) are not implemented yet")
+            return self.parse_loop()
         if t == 'HOWIZI':
             return self.parse_function()
         if t == 'FOUNDYR':
@@ -212,6 +223,59 @@ class Parser:
         self.expect('OIC', "O RLY? must end with OIC")
         return ('orly', yes, mebbes, no)
 
+    def parse_wtf(self):
+        self.i += 1
+        cases = []
+        default = None
+
+        while True:
+            self.skip_newlines()
+            t = self.peek()
+
+            if t == 'OMG':
+                self.i += 1
+                value = self.parse_expr()
+                if value[0] != 'lit':
+                    raise InterpreterError("OMG must be followed by a literal value")
+                cases.append((value[1], self.parse_block({'OMG', 'OMGWTF', 'OIC'})))
+
+            elif t == 'OMGWTF':
+                self.i += 1
+                default = self.parse_block({'OIC'})
+
+            elif t == 'OIC':
+                self.i += 1
+                return ('wtf', cases, default)
+
+            else:
+                raise InterpreterError("WTF? must contain OMG cases and end with OIC")
+
+    def parse_loop(self):
+        self.i += 1
+        label = self.expect('VAR', "IM IN YR must be followed by a loop name")
+
+        op = self.next()[0]
+        if op not in ('UPPIN', 'NERFIN'):
+            raise InterpreterError("A loop needs UPPIN or NERFIN")
+
+        self.expect('YR', "UPPIN/NERFIN must be followed by YR")
+        var = self.expect('VAR', "YR must be followed by a variable")
+
+        kind = None
+        cond = None
+        if self.peek() in ('TIL', 'WILE'):
+            kind = self.next()[0]
+            cond = self.parse_expr()
+
+        body = self.parse_block({'IMOUTTAYR'})
+        self.expect('IMOUTTAYR', "A loop must end with IM OUTTA YR")
+
+        end_label = self.expect('VAR', "IM OUTTA YR must be followed by the loop name")
+        if end_label != label:
+            raise InterpreterError("Loop closing name does not match")
+
+        return ('loop', label, op, var, kind, cond, body)
+
     def parse_function(self):
         self.i += 1
         name = self.expect('VAR', "HOW IZ I must be followed by a function name")
@@ -252,7 +316,7 @@ class Parser:
             right = self.parse_expr()
             return ('bin', tok, left, right)
 
-        if tok in ('NOT', 'NOTOF'):
+        if tok == 'NOT':
             return ('not', self.parse_expr())
 
         # many values:  ALL OF <expr> AN <expr> ... MKAY
@@ -300,14 +364,19 @@ class Parser:
 #   NOOB = None   TROOF = True/False   NUMBR = int   NUMBAR = float   YARN = str
 # =====================================================
 def format_float(x):
-    # a NUMBAR is truncated to NUMBAR_DECIMALS decimals when it becomes text
+    # NUMBAR -> YARN: truncate to at most NUMBAR_DECIMALS decimals (2.8 -> "2.8", 3.14159 -> "3.14", 17.0 -> "17.0")
     if x != x or x in (math.inf, -math.inf):
         return str(x)
     try:
         quantum = Decimal(1).scaleb(-NUMBAR_DECIMALS)
-        return str(Decimal(repr(x)).quantize(quantum, rounding=ROUND_DOWN))
+        text = str(Decimal(repr(x)).quantize(quantum, rounding=ROUND_DOWN))
     except InvalidOperation:
         return repr(x)
+    if '.' in text:
+        text = text.rstrip('0')
+        if text.endswith('.'):
+            text += '0'
+    return text
 
 
 def to_yarn(v):
@@ -342,25 +411,13 @@ def to_number(v):
     return float(text) if '.' in text else int(text)
 
 
-def numeric_value(v):
-    # a number, or a YARN that looks like a number; anything else gives None
-    if v is None or isinstance(v, bool):
-        return None
-    if isinstance(v, (int, float)):
-        return v
-    text = v.strip()
-    if NUMBER_PATTERN.match(text):
-        return float(text) if '.' in text else int(text)
-    return None
-
-
 def equal(a, b):
-    # used by BOTH SAEM, DIFFRINT, and the OMG cases of WTF?
-    if isinstance(a, str) and isinstance(b, str):
+    # BOTH SAEM, DIFFRINT and the OMG cases of WTF?
+    # NO automatic typecasting: NUMBR/NUMBAR compare as numbers, everything else needs the same type
+    if isinstance(a, bool) or isinstance(b, bool):
+        return isinstance(a, bool) and isinstance(b, bool) and a == b
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
         return a == b
-    x, y = numeric_value(a), numeric_value(b)
-    if x is not None and y is not None:
-        return x == y
     return type(a) == type(b) and a == b
 
 
@@ -411,7 +468,7 @@ def arithmetic(op, a, b):
 
 
 # =====================================================
-# INTERPRETER: runs the tree
+# INTERPRETER
 # =====================================================
 class Scope:
     # the variables of one place in the program (the main program, or one function call)
@@ -422,25 +479,67 @@ class Scope:
 
 class Interpreter:
 
-    def __init__(self, write=None, read=None):
-        # write(text): where VISIBLE output goes     read(name): where GIMMEH input comes from
+    def __init__(self, write=None, read=None, on_symbol=None):
+        # write(text)   : where VISIBLE output goes        (default: the terminal)
+        # read(name)    : where GIMMEH input comes from    (default: the terminal)
+        # on_symbol(name, text): called every time a main-program variable changes (for the GUI)
         self.write = write or (lambda text: print(text, end=""))
         self.read = read or (lambda name: input(name + "> "))
+        self.on_symbol = on_symbol
 
-        self.functions = {}     # STORED FUNCTIONS:  name -> (parameters, body)
-        self.globals = Scope()  # variables of the main program
+        # the project's own tools
+        self.lexer = LexicalAnalyzer()
+        self.lexeme_table = LexemeTable()
+        self.table = SymbolTable()      # symbol table: {identifier: value shown as text}
+
+        self.token = []
+        self.lexeme = []
+        self.rows = []                  # [(lexeme, token, classification)]
+
+        self.functions = {}             # STORED FUNCTIONS:  name -> (parameters, body)
+        self.globals = Scope()          # variables of the main program
         self.steps = 0
         self.depth = 0
 
-    def run(self, token, lexeme):
-        program = Parser(token, lexeme).parse_program()
+    # ----- step 1: lexical + syntax + semantic analysis -----
+    def analyze(self, code):
+        token, lexeme = self.lexer.tokenize(code.rstrip())
+        syntax(token, lexeme)           # raises SyntaxError (also removes the comments)
+        semantic(token, lexeme)         # raises SemanticError
+
+        self.token, self.lexeme = token, lexeme
+        # (lexeme, token, classification) rows, using the classifications of LexemeTable
+        classes = self.lexeme_table.classifications
+        self.rows = [
+            (lex, tok, "Line Break" if tok == "NEWLINE" else classes.get(tok, "Keyword"))
+            for tok, lex in zip(token, lexeme)
+        ]
+        return self.rows
+
+    # ----- step 2: run the analyzed program -----
+    def execute(self):
+        program = Parser(self.token, self.lexeme).parse_program()
+
+        self.functions = {}
+        self.globals = Scope()
         self.steps = 0
         self.depth = 0
+        self.table.symbols = {}
+        self.store(self.globals, 'IT', None)
+
+        # functions are stored first so they can be called before the line where they are written
+        for stmt in program:
+            if stmt[0] == 'func':
+                self.functions[stmt[1]] = (stmt[2], stmt[3])
 
         try:
             self.run_block(program, self.globals)
         except (BreakSignal, ReturnSignal):
             pass                # GTFO or FOUND YR outside of anything: just stop
+
+    def run(self, code):
+        self.analyze(code)
+        self.execute()
 
     # ----- running statements -----
     def tick(self):
@@ -466,7 +565,7 @@ class Interpreter:
                 value = DEFAULT_VALUES.get(type_name)
             else:
                 value = None
-            scope.vars[name] = value
+            self.store(scope, name, value)
 
         elif kind == 'print':
             text = "".join(to_yarn(self.evaluate(e, scope)) for e in stmt[1])
@@ -487,13 +586,18 @@ class Interpreter:
             self.set_var(stmt[1], cast(self.get_var(stmt[1], scope), stmt[2]), scope)
 
         elif kind == 'expr':
-            scope.it = self.evaluate(stmt[1], scope)
+            self.store(scope, 'IT', self.evaluate(stmt[1], scope))
 
         elif kind == 'orly':
             self.run_orly(stmt, scope)
 
+        elif kind == 'wtf':
+            self.run_wtf(stmt, scope)
+
+        elif kind == 'loop':
+            self.run_loop(stmt, scope)
+
         elif kind == 'func':
-            # store the function so it can be called later
             self.functions[stmt[1]] = (stmt[2], stmt[3])
 
         elif kind == 'return':
@@ -517,12 +621,72 @@ class Interpreter:
         if no is not None:
             self.run_block(no, scope)
 
-    # ----- variables -----
+    def run_wtf(self, stmt, scope):
+        _, cases, default = stmt
+
+        blocks = [block for _, block in cases]
+        if default is not None:
+            blocks.append(default)
+
+        # find the first OMG that matches IT, otherwise start at OMGWTF
+        start = None
+        for index, (value, _) in enumerate(cases):
+            if equal(scope.it, value):
+                start = index
+                break
+        if start is None and default is not None:
+            start = len(cases)
+
+        if start is None:
+            return
+
+        # without a GTFO the cases below the matching one also run (fall through)
+        try:
+            for block in blocks[start:]:
+                self.run_block(block, scope)
+        except BreakSignal:
+            pass
+
+    def run_loop(self, stmt, scope):
+        _, label, op, var, kind, cond, body = stmt
+
+        self.find(var, scope)                            # the loop variable must exist
+
+        while True:
+            self.tick()
+
+            if cond is not None:
+                answer = to_troof(self.evaluate(cond, scope))
+                if kind == 'TIL' and answer:             # TIL: stop when the condition is WIN
+                    break
+                if kind == 'WILE' and not answer:        # WILE: stop when the condition is FAIL
+                    break
+
+            try:
+                self.run_block(body, scope)
+            except BreakSignal:
+                break
+
+            current = to_number(self.get_var(var, scope))
+            self.set_var(var, current + 1 if op == 'UPPIN' else current - 1, scope)
+
+    # ----- variables (main program variables are mirrored in the SymbolTable) -----
+    def store(self, scope, name, value):
+        if name == 'IT':
+            scope.it = value
+        else:
+            scope.vars[name] = value
+
+        if scope is self.globals:
+            text = to_yarn(value)
+            self.table.symbols[name] = text
+            if self.on_symbol:
+                self.on_symbol(name, text)
+
     def find(self, name, scope):
+        # a function can only see its own parameters (not the main variables)
         if name in scope.vars:
             return scope
-        if name in self.globals.vars:                    # functions may also use main variables
-            return self.globals
         raise InterpreterError("Variable " + name + " is not declared")
 
     def get_var(self, name, scope):
@@ -531,10 +695,9 @@ class Interpreter:
         return self.find(name, scope).vars[name]
 
     def set_var(self, name, value, scope):
-        if name == 'IT':
-            scope.it = value
-        else:
-            self.find(name, scope).vars[name] = value
+        if name != 'IT':
+            self.find(name, scope)
+        self.store(scope, name, value)
 
     # ----- evaluating expressions -----
     def evaluate(self, e, scope):
@@ -599,14 +762,15 @@ class Interpreter:
 
         self.depth += 1
         if self.depth > MAX_DEPTH:
+            self.depth -= 1
             raise InterpreterError("Function " + name + " called itself too many times")
 
         local = Scope()                                  # each call has its own variables
-        local.vars = dict(zip(params, args))
+        local.vars = dict(zip(params, args))             # pass by value
 
         try:
             self.run_block(body, local)
-            result = local.it                            # no FOUND YR: the answer is IT
+            result = None                                # no FOUND YR / GTFO: NOOB
         except ReturnSignal as signal:
             result = signal.value
         except BreakSignal:                              # GTFO: return NOOB
@@ -615,3 +779,21 @@ class Interpreter:
             self.depth -= 1
 
         return result
+
+
+if __name__ == "__main__":
+    path = sys.argv[1] if len(sys.argv) > 1 else 'program.lol'
+    with open(path, 'r', encoding='utf-8') as f:
+        source = f.read()
+
+    interpreter = Interpreter()
+    try:
+        interpreter.run(source)
+    except SyntaxError as e:
+        print("SyntaxError:", e)
+    except SemanticError as e:
+        print("SemanticError:", e)
+    except InterpreterError as e:
+        print("RuntimeError:", e)
+
+    interpreter.table.display()
