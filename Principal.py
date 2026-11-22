@@ -8,6 +8,7 @@ from SymbolTable import SymbolTable
 from LexemeTable import LexemeTable
 from SyntaxAnalyzer import syntax
 from SemanticAnalyzer import semantic, SemanticError
+from Interpreter import Interpreter, InterpreterError
 
 
 class App(tk.Tk):
@@ -21,6 +22,7 @@ class App(tk.Tk):
 
         self.build_toolbar()
         self.build_tables()
+        self.build_console()
         self.load_editor()
 
         self.analyze()
@@ -78,9 +80,74 @@ class App(tk.Tk):
         for code in Buffer().load_buffer():
             self.editor.insert("1.0", code)
 
+    # console: shows the output of the program and takes input for GIMMEH
+    def build_console(self):
+        self.running = False
+
+        frame = ttk.LabelFrame(self, text="Console")
+        frame.grid(row=2, column=0, sticky="nsew", padx=6, pady=6)
+
+        self.console = scrolledtext.ScrolledText(
+            frame, height=8, state="disabled", font=("Consolas", 11)
+        )
+        self.console.pack(fill="both", expand=True)
+
+        # input field, only usable while the program waits for GIMMEH
+        input_bar = ttk.Frame(frame)
+        input_bar.pack(fill="x")
+        ttk.Label(input_bar, text="Input:").pack(side="left", padx=(0, 6))
+        self.input_text = tk.StringVar()
+        self.input_done = tk.IntVar(value=0)
+        self.input_entry = ttk.Entry(input_bar, textvariable=self.input_text, state="disabled")
+        self.input_entry.pack(side="left", fill="x", expand=True)
+        self.input_entry.bind("<Return>", lambda event: self.input_done.set(1))
+
+    def write_console(self, text):
+        self.console.config(state="normal")
+        self.console.insert("end", text)
+        self.console.see("end")
+        self.console.config(state="disabled")
+        self.update_idletasks()
+
+    def clear_console(self):
+        self.console.config(state="normal")
+        self.console.delete("1.0", "end")
+        self.console.config(state="disabled")
+
+    def read_input(self, name):
+        # called by the interpreter on GIMMEH: waits until Enter is pressed in the input field
+        self.write_console(name + "> ")
+        self.input_entry.config(state="normal")
+        self.input_entry.focus_set()
+        self.input_done.set(0)
+        try:
+            self.wait_variable(self.input_done)
+        except tk.TclError:
+            return None
+        text = self.input_text.get()
+        self.input_text.set("")
+        self.input_entry.config(state="disabled")
+        self.write_console(text + "\n")
+        return text
+
+    def run_program(self, token, lexeme):
+        # runs the program with the interpreter (it stores the functions of the program)
+        self.running = True
+        self.interpreter = Interpreter(self.write_console, self.read_input)
+        try:
+            self.interpreter.run(token, lexeme)
+        except InterpreterError as e:
+            self.write_console("\nRuntimeError: " + str(e) + "\n")
+            self.status.config(text="RuntimeError")
+        finally:
+            self.running = False
+
     # does the main work of the program
     def analyze(self):
+        if self.running:        # a program is still waiting for input
+            return
         self.clear_tables()
+        self.clear_console()
         self.status.config(text="")
 
         # objects
@@ -115,8 +182,8 @@ class App(tk.Tk):
             for name, value in symbol_table.build(token, lexeme).items():
                 self.symbol_tree.insert("", "end", values=(name, value))
 
-            for label, value in symbol_table.function_calls(token, lexeme):
-                self.symbol_tree.insert("", "end", values=(label, value))
+            # run the program (its output goes to the console)
+            self.run_program(token, lexeme)
 
         except SyntaxError as e:
             self.status.config(text="SyntaxError")
