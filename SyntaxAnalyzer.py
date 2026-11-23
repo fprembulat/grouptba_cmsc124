@@ -50,7 +50,7 @@ def syntax(token, lexeme):
         elif token[i] == 'WAZZUP':
             i = wazzup_helper(token, i)
         elif token[i] == 'VARDEC':
-            i = vardec_helper(token, i)
+            raise SyntaxError("Variables must be declared inside WAZZUP")
 
         elif token[i] == 'PRINT':
             i = print_helper(token, i)
@@ -574,8 +574,6 @@ def block_helper(token, lexeme, i, terminators, where):
             i = isnowa_helper(token, i)
         elif t == 'ORLY':
             i = orly_helper(token, lexeme, i)
-        elif t == 'VARDEC':
-            i = vardec_helper(token, i)
         elif t == 'GTFO':
             i += 1
         elif t == 'FOUNDYR':
