@@ -549,7 +549,7 @@ def wazzup_helper(token, i):
         elif token[i] == 'END':
             raise SyntaxError("WAZZUP must end with BUHBYE")
         else:
-            raise SyntaxError("Only variable declarations are allowed inside WAZZUP")
+            raise SyntaxError("Invalid declarations inside WAZZUP")
                 
     if i >= len(token):
         raise SyntaxError("WAZZUP must end with BUHBYE")
