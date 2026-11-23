@@ -48,7 +48,7 @@ def syntax(token, lexeme):
             continue
 
         elif token[i] == 'WAZZUP':
-            i = wazzup_helper(token, i)
+            raise SyntaxError("Variables must be declared inside WAZZUP")
 
         elif token[i] == 'VARDEC':
             i = vardec_helper(token, i)
