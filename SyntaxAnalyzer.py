@@ -3,16 +3,25 @@
 # -----------------------------------------------------
 # MAIN FUNCTION
 # -----------------------------------------------------
-
 def syntax(token, lexeme):
     token, lexeme = remove_sline_comm(token, lexeme)
+
+    # remove multiline comments everywhere (before any other check)
+    i = 0
+    while i < len(token):
+        if token[i] == 'OBTW':
+            token, lexeme = comm_helper(token, lexeme, i)
+        else:
+            i += 1
+
     i = 0
 
-    # -----------------------------------------------------
+    # strip leading newlines
     while token and token[0] == 'NEWLINE':
         token.pop(0)
         lexeme.pop(0)
 
+    # functions before HAI
     while i < len(token) and token[i] == 'HOWIZI':
         i = function_helper(token, lexeme, i)
 
@@ -22,34 +31,27 @@ def syntax(token, lexeme):
     if i >= len(token) or token[i] != 'START':
         raise SyntaxError("Program must start with HAI")
 
-    while token and token[-1] == 'NEWLINE':
-        token.pop()
-        lexeme.pop()
-        
-    if not token or token[-1] != 'END':
+    # KTHXBYE must exist; the first END token is the program's end
+    if 'END' not in token:
         raise SyntaxError("Program must end with KTHXBYE")
 
-    # -----------------------------------------------------
+    end_i = token.index('END')
 
     # start after HAI
     i += 1
 
-    # -----------------------------------------------------
-    # loop through all tokens until KTHXBYE
-    while i < len(token) - 1:
+    # main loop: runs until KTHXBYE
+    while i < end_i:
 
-        # skip newlines
         if token[i] == 'NEWLINE':
             i += 1
-        
+
         elif token[i] == 'WAZZUP':
             i = wazzup_helper(token, i)
 
-        # variable declaration
         elif token[i] == 'VARDEC':
             i = vardec_helper(token, i)
 
-        # output statement
         elif token[i] == 'PRINT':
             i = print_helper(token, i)
 
@@ -58,13 +60,13 @@ def syntax(token, lexeme):
 
         elif token[i] == 'WTF':
             i = wtf_helper(token, i)
-        
+
         elif token[i] == 'IMINYR':
             i = loop_helper(token, lexeme, i)
 
         elif token[i] == 'IIZ':
             i = function_call_helper(token, i)
-        
+
         elif token[i] in ('SUM', 'DIFF', 'PRODUKT', 'QUOSHUNT', 'MOD', 'BIGGR', 'SMALLR'):
             i = arithmetic_helper(token, i)
 
@@ -89,29 +91,36 @@ def syntax(token, lexeme):
         elif token[i] == 'HOWIZI':
             i = function_helper(token, lexeme, i)
 
-        # input statement
         elif token[i] == 'GIMMEH':
             i = input_helper(token, i)
 
         elif token[i] == 'VAR':
-            if i + 1 <len(token) and token[i + 1] == 'ISNOWA':
+            if i + 1 < len(token) and token[i + 1] == 'ISNOWA':
                 i = isnowa_helper(token, i)
             elif i + 1 < len(token) and token[i + 1] == 'NEWLINE':
                 i += 1
             else:
-                i = assign_helper(token, i)    
+                i = assign_helper(token, i)
 
-        # multiline comment
-        elif token[i] == 'OBTW':
-            token, lexeme = comm_helper(token, lexeme, i)
-            continue
-
-        # unexpected token
         else:
             raise SyntaxError('Unexpected token: ' + token[i])
-    # -----------------------------------------------------
 
+    # after KTHXBYE: only newlines and functions are allowed
+    i = end_i + 1
+
+    while i < len(token) and token[i] == 'NEWLINE':
+        i += 1
+
+    while i < len(token) and token[i] == 'HOWIZI':
+        i = function_helper(token, lexeme, i)
+
+        while i < len(token) and token[i] == 'NEWLINE':
+            i += 1
+
+    if i < len(token):
+        raise SyntaxError("Only functions and comments are allowed after KTHXBYE")
 # -----------------------------------------------------
+
 # HELPER FUNCTIONS
 # -----------------------------------------------------
 
