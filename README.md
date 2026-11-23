@@ -55,6 +55,7 @@ Linux/macOS:
 
 # How the interpreter works / File breakdown
 
+```
 File 					|				Role
 =============================================================================================================
 Principal.py 			| Main file. Tkinter window with the editor, tokens, symbol table, and console. Calls
@@ -74,7 +75,7 @@ LexemeTable.py			| Maps each token to a type/classification for the token table
 						|
 SymbolTable.py 			| Stores variable names and their values as text.
 						|
-
+```
 
 References:
 
