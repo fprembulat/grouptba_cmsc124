@@ -1,6 +1,5 @@
 # for lexeme classification
 
-# todo: lexeme table kulang pa {OMG, SMOOSH}
 class LexemeTable:
     def __init__(self):
         self.classifications = {
@@ -12,8 +11,8 @@ class LexemeTable:
             'NUM': 'Literal',
             'NUMBAR': 'Literal',
             'YARN': 'Literal',
-            'YARN': 'Literal',
             'TROOF': 'Literal',
+            'NOOB': 'Literal',
             'TYPE': 'Type Literal',
             'PRINT': 'Output Keyword',
             'GIMMEH': 'Input Keyword',
@@ -22,6 +21,8 @@ class LexemeTable:
             'PRODUKT': 'Arithmetic Operator',
             'QUOSHUNT': 'Arithmetic Operator',
             'MOD': 'Arithmetic Operator',
+            'BIGGR': 'Arithmetic Operator',
+            'SMALLR': 'Arithmetic Operator',
             'BOTHSAEM': 'Comparison Operator',
             'DIFFRINT': 'Comparison Operator',
             'WAZZUP': 'Code Delimiter',
@@ -32,40 +33,47 @@ class LexemeTable:
             'R': 'Variable Assignment',
             'MAEK': 'Typecasting Keyword',
             'ISNOWA': 'Typecasting Keyword',
+            'A': 'Typecasting Keyword',
             'SMOOSH': 'String Concatenation',
-            'SMALLR': 'Comparison Operator',
-            'BIGGR' : 'Comparison Operator',
             'BOTHOF': 'Boolean Operator',
-            'EITHEROF': 'Boolean Operator',
-            'NOT' : 'Boolean Operator',
-            'WONOF' : 'Boolean Operator',
-            'ANYOF' : 'Boolean Operator',
-            'ALLOF' : 'Boolean Operator',
+            'EITHER': 'Boolean Operator',
+            'NOT': 'Boolean Operator',
+            'WONOF': 'Boolean Operator',
+            'ANYOF': 'Boolean Operator',
+            'ALLOF': 'Boolean Operator',
             'ORLY': 'Conditional Statement',
-            'YARLY' : 'Conditional Statement',
-            'NOWAI' : 'Conditional Statement',
+            'YARLY': 'Conditional Statement',
+            'NOWAI': 'Conditional Statement',
             'MEBBE': 'Conditional Statement',
-            'OIC' : 'Conditional Statement',
-            'WTF' : 'Switch Statement',
+            'OIC': 'Conditional Statement',
+            'WTF': 'Switch Statement',
             'OMGWTF': 'Switch Statement',
-            'OMG' : 'Switch Statement',
-            'IMINYR' : 'Loop Delimiter',
-            'IMOUTTAYR' : 'Loop Delimiter',
-            'HOWIZI' : 'Function Delimiter',
-            'IFUSAYSO' : 'Function Delimiter',
-            'IIZ' : 'Function Call',
-            'UPPIN' : 'Increment',
-            'NERFIN' : 'Decrement',
-            'TIL' : 'Loop Delimiter',
-            'WILE' : 'Loop Delimiter',
-            'GTFO' : 'Loop Delimiter',
-            'MKAY' : 'Operation Delimiter',
-
+            'OMG': 'Switch Statement',
+            'IMINYR': 'Loop Delimiter',
+            'IMOUTTAYR': 'Loop Delimiter',
+            'HOWIZI': 'Function Delimiter',
+            'IFUSAYSO': 'Function Delimiter',
+            'FOUNDYR': 'Return Keyword',
+            'IIZ': 'Function Call',
+            'YR': 'Parameter Keyword',
+            'UPPIN': 'Increment',
+            'NERFIN': 'Decrement',
+            'TIL': 'Loop Delimiter',
+            'WILE': 'Loop Delimiter',
+            'GTFO': 'Loop Delimiter',
+            'MKAY': 'Operation Delimiter',
+            'AN': 'Operand Separator',
+            'PLUS': 'Output Separator',
+            'NEWLINE': 'Line Break',
         }
 
+    # gives the classification of one token (example: 'SUM' -> 'Arithmetic Operator')
+    def classify(self, token_type):
+        return self.classifications.get(token_type, "Keyword")
+
+    # gives back the list of lexemes (same output as before)
     def build(self, token, lexeme):
         lexemes = []
         for i in range(len(token)):
-            classification = self.classifications.get(token[i], "Keyword")
             lexemes.append(lexeme[i])
         return lexemes

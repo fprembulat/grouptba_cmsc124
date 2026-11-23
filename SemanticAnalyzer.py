@@ -38,6 +38,14 @@ EXPR_TOKENS = (
     + BOOL_OPS
     + INF_OPS
 )
+
+# functions whose bodies are being checked right now
+# (stops a recursive function from re-checking its own body forever)
+_active_calls = set()
+
+# functions whose HOW IZ I has been reached in the main loop
+# (used for the "already defined" rule and the "define before calling" rule)
+_defined = set()
 # -----------------------------------------------------
 
 
@@ -52,6 +60,14 @@ def semantic(token, lexeme):
 
     # dictionary that stores defined functions
     functions = {}
+
+    # reset the recursion bookkeeping (in case semantic() runs more than once)
+    _active_calls.clear()
+    _defined.clear()
+
+    # register every function name and its parameters first,
+    # so functions can call each other (mutual recursion)
+    predeclare_functions(token, lexeme, functions)
 
     # start from the first token (functions may appear before HAI)
     i = 0
@@ -69,13 +85,49 @@ def semantic(token, lexeme):
 # HELPER FUNCTIONS
 # -----------------------------------------------------
 
+# PREDECLARE FUNCTIONS HELPER
+# -----------------------------------------------------
+# scans the whole program for HOW IZ I and saves each function's name and
+# parameter list with return type 'ANY' (the real type is found later)
+def predeclare_functions(token, lexeme, functions):
+
+    j = 0
+    while j < len(token):
+
+        if token[j] == 'HOWIZI':
+            name = lexeme[j + 1]
+            k = j + 2
+            params = []
+
+            while k < len(token) and token[k] == 'YR':
+                params.append(lexeme[k + 1])
+                k += 2
+                if k < len(token) and token[k] == 'AN':
+                    k += 1
+
+            # keep the first one, function_helper reports duplicates
+            if name not in functions:
+                functions[name] = (params, k, 'ANY')
+
+            j = k
+        else:
+            j += 1
+# -----------------------------------------------------
+
 # STATEMENT HELPER
 # -----------------------------------------------------
 # checks one statement starting at index i and gives back the next index
 def statement_helper(token, lexeme, i, symbols, functions):
 
-    # skip newlines, single-line comments, and program delimiters (HAI / KTHXBYE)
-    if token[i] in ('NEWLINE', 'BTW', 'START', 'END'):
+    # HAI may be followed by a version number (HAI 1.2), which is not an expression
+    if token[i] == 'START':
+        i += 1
+        if i < len(token) and token[i] in ('NUMBAR', 'NUM'):
+            i += 1
+        return i
+
+    # skip newlines, single-line comments, and KTHXBYE
+    if token[i] in ('NEWLINE', 'BTW', 'END'):
         return i + 1
 
     # skip multiline comments if still present
@@ -325,7 +377,8 @@ def print_helper(token, lexeme, i, symbols, functions=None):
 
     while i < len(token) and token[i] != 'NEWLINE' and token[i] != 'END':
 
-        if token[i] == 'PLUS':
+        # VISIBLE a + b and VISIBLE a AN b both separate values
+        if token[i] in ('PLUS', 'AN'):
             i += 1
             continue
 
@@ -690,8 +743,9 @@ def function_helper(token, lexeme, i, symbols, functions):
     func_name = lexeme[i + 1]
 
     # rule 1: no defining the same function twice
-    if func_name in functions:
+    if func_name in _defined:
         raise SemanticError("Function " + func_name + " is already defined")
+    _defined.add(func_name)
 
     # move past HOW IZ I and function name
     i += 2
@@ -710,20 +764,32 @@ def function_helper(token, lexeme, i, symbols, functions):
 
     body_start = i
 
+    # save the function BEFORE checking its body so it can call itself
+    # (the return type is not known yet, 'ANY' is accepted by every check)
+    functions[func_name] = (params, body_start, 'ANY')
+
     # check the function body using a local symbol table with its parameters
     local_symbols = {'IT': 'NOOB'}
     for param in params:
         local_symbols[param] = 'ANY'
 
     return_type = 'NOOB'
-    while i < len(token) and token[i] != 'IFUSAYSO':
-        if token[i] == 'FOUNDYR':
-            return_type, i = get_operand_type(token, lexeme, i + 1, local_symbols, functions)
-            local_symbols['IT'] = return_type
-        else:
-            i = statement_helper(token, lexeme, i, local_symbols, functions)
+    _active_calls.add(func_name)
+    try:
+        while i < len(token) and token[i] != 'IFUSAYSO':
+            if token[i] == 'FOUNDYR':
+                return_type, i = get_operand_type(token, lexeme, i + 1, local_symbols, functions)
+                local_symbols['IT'] = return_type
+            else:
+                i = statement_helper(token, lexeme, i, local_symbols, functions)
+    finally:
+        _active_calls.discard(func_name)
 
-    # save the function so I IZ calls can check it
+    # FOUND YR inside O RLY? / WTF? / a loop: the type depends on the path taken
+    if return_type == 'NOOB' and 'FOUNDYR' in token[body_start:i]:
+        return_type = 'ANY'
+
+    # save the final return type so I IZ calls can check it
     functions[func_name] = (params, body_start, return_type)
 
     # move past IF U SAY SO
@@ -754,7 +820,8 @@ def function_call_helper(token, lexeme, i, symbols, functions):
         i += 1
 
     # rule 1: function must be defined before calling it
-    if func_name not in functions:
+    # (inside a function body it may be defined later, so functions can call each other)
+    if func_name not in functions or (func_name not in _defined and not _active_calls):
         raise SemanticError("Function " + func_name + " is not defined")
 
     params, body_start, return_type = functions[func_name]
@@ -766,19 +833,32 @@ def function_call_helper(token, lexeme, i, symbols, functions):
             + " argument(s), got " + str(len(arg_types))
         )
 
+    # recursive call: the body is already being checked, so do not check it again
+    # (this is what stops infinite recursion), just use the known return type
+    if func_name in _active_calls:
+        return return_type, i
+
     # check the function body with the actual argument types to get the exact return type
     call_symbols = {'IT': 'NOOB'}
     for param, arg_type in zip(params, arg_types):
         call_symbols[param] = arg_type
 
     j = body_start
-    call_return = return_type
-    while j < len(token) and token[j] != 'IFUSAYSO':
-        if token[j] == 'FOUNDYR':
-            call_return, j = get_operand_type(token, lexeme, j + 1, call_symbols, functions)
-            call_symbols['IT'] = call_return
-        else:
-            j = statement_helper(token, lexeme, j, call_symbols, functions)
+    call_return = 'NOOB'
+    _active_calls.add(func_name)
+    try:
+        while j < len(token) and token[j] != 'IFUSAYSO':
+            if token[j] == 'FOUNDYR':
+                call_return, j = get_operand_type(token, lexeme, j + 1, call_symbols, functions)
+                call_symbols['IT'] = call_return
+            else:
+                j = statement_helper(token, lexeme, j, call_symbols, functions)
+    finally:
+        _active_calls.discard(func_name)
+
+    # FOUND YR inside O RLY? / WTF? / a loop: the type depends on the path taken
+    if call_return == 'NOOB' and 'FOUNDYR' in token[body_start:j]:
+        call_return = 'ANY'
 
     return call_return, i
 # -----------------------------------------------------

@@ -6,11 +6,11 @@ class LexicalAnalyzer:
     def __init__(self):
 
         self.rules = [
-            ('START', r'HAI'),
-            ('END', r'KTHXBYE'),
+            ('START', r'HAI\b'),
+            ('END', r'KTHXBYE\b'),
 
-            ('WAZZUP', r'WAZZUP'),
-            ('BUHBYE', r'BUHBYE'),
+            ('WAZZUP', r'WAZZUP\b'),
+            ('BUHBYE', r'BUHBYE\b'),
 
             ('OBTW', r'OBTW\b'),
             ('TLDR', r'TLDR\b'),
@@ -91,8 +91,8 @@ class LexicalAnalyzer:
             # recognize plus symbol for visible
             ('PLUS', r'\+'),
 
-            # ignore spaces and tabs
-            ('SKIP', r'[ \t]+'),
+            # ignore spaces, tabs, and carriage returns (Windows line endings)
+            ('SKIP', r'[ \t\r]+'),
 
             # track newlines
             ('NEWLINE', r'\n'),
@@ -114,9 +114,22 @@ class LexicalAnalyzer:
         token = []
         lexeme = []
 
+        # True while we are between OBTW and TLDR
+        in_comment = False
+
         for match in self.regex.finditer(code):
             token_type = match.lastgroup
             value = match.group()
+
+            # inside a multiline comment only TLDR (the end) and newlines are kept,
+            # everything else is comment text and must not be checked or reported
+            if in_comment and token_type not in ('TLDR', 'NEWLINE'):
+                continue
+
+            if token_type == 'OBTW':
+                in_comment = True
+            elif token_type == 'TLDR':
+                in_comment = False
 
             if token_type == 'SKIP':
                 continue
