@@ -21,7 +21,7 @@ def syntax(token, lexeme):
 
     if i >= len(token) or token[i] != 'START':
         raise SyntaxError("Program must start with HAI")
-        
+
     while token and token[-1] == 'NEWLINE':
         token.pop()
         lexeme.pop()
@@ -47,7 +47,7 @@ def syntax(token, lexeme):
 
         # variable declaration
         elif token[i] == 'VARDEC':
-            raise SyntaxError("Variable declaration must be inside WAZZUP and BUHBYE")
+            i = vardec_helper(token, i)
 
         # output statement
         elif token[i] == 'PRINT':
@@ -170,9 +170,6 @@ def vardec_helper(token, i):
 # -----------------------------------------------------
 def comm_helper(token, lexeme, i):	
     if i > 0 and token[i - 1] != 'NEWLINE':
-        raise SyntaxError("OBTW must be on its own line")
-    
-    if i + 1 < len(token) and token[i + 1] != 'NEWLINE':
         raise SyntaxError("OBTW must be on its own line")
 
     j = i + 1
