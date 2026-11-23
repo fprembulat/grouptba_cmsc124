@@ -540,73 +540,66 @@ def wazzup_helper(token, i):
 
 # ORLY HELPER
 # -----------------------------------------------------
+def block_helper(token, i, terminators, where):
+    while i < len(token) and token[i] not in terminators:
+        t = token[i]
+        if t == 'NEWLINE':
+            i += 1
+        elif t == 'PRINT':
+            i = print_helper(token, i)
+        elif t == 'VAR' and i + 1 < len(token) and token[i + 1] == 'R':
+            i = assign_helper(token, i)
+        elif t == 'ORLY':
+            i = orly_helper(token, i)
+        elif t == 'VARDEC':
+            i = vardec_helper(token, i)
+        elif t == 'END':
+            raise SyntaxError("O RLY must end with OIC")
+        else:
+            raise SyntaxError(f"Invalid statement inside {where}")
+    return i
+
+
 def orly_helper(token, i):
     i += 1
-
     while i < len(token) and token[i] == 'NEWLINE':
         i += 1
 
     if i >= len(token) or token[i] != 'YARLY':
         raise SyntaxError("O RLY must be followed by YA RLY")
-
     i += 1
 
-    while i < len(token) and token[i] not  in ('MEBBE', 'NOWAI', 'OIC'):
-        if token[i] == 'NEWLINE':
-            i += 1
-        elif token[i] == 'PRINT':
-            i = print_helper(token, i)
-        elif token[i] == 'VAR':
-            if i + 1 < len(token) and token[i + 1] == 'R':
-                i = assign_helper(token, i)
-            else:
-                raise SyntaxError("Invalid statement inside YA RLY")
-        elif token[i] == 'END':
-            raise SyntaxError("O RLY must end with OIC")
-        else:
-            raise SyntaxError("Invalid statement inside YA RLY")
+    i = block_helper(token, i, ('MEBBE', 'NOWAI', 'OIC'), "YA RLY")
 
     while i < len(token) and token[i] == 'MEBBE':
         i += 1
 
-        if i >= len(token) or token[i] not in ('TROOF', 'VAR'):
+        if i >= len(token) or token[i] == 'NEWLINE':
             raise SyntaxError("MEBBE must be followed by a condition")
 
-        i += 1
+        if token[i] in ('BOTHSAEM', 'DIFFRINT'):
+            i = comparison_helper(token, i)
 
-        while i < len(token) and token[i] not in ('MEBBE', 'NOWAI', 'OIC'):
-            if token[i] == 'NEWLINE':
-                i += 1
-            elif token[i] == 'PRINT':
-                i = print_helper(token, i)
-            elif token[i] == 'VAR':
-                if i + 1 < len(token) and token[i + 1] == 'R':
-                    i = assign_helper(token, i)
-                else:
-                    raise SyntaxError("Invalid statement inside MEBBE")
-            elif token[i] == 'END':
-                raise SyntaxError("O RLY must end with OIC")
-            else: 
-                raise SyntaxError("Invalid statement inside MEBBE")
-        
-            
+        elif token[i] in ('BOTHOF', 'EITHER', 'WONOF'):
+            i = boolean_helper(token, i)
+
+        elif token[i] in ('ALLOF', 'ANYOF'):
+            i = infinite_boolean_helper(token, i)
+
+        elif token[i] == 'NOT':
+            i = not_helper(token, i)
+
+        elif token[i] in ('VAR', 'TROOF'):
+            i += 1
+
+        else:
+            raise SyntaxError("Invalid MEBBE condition")
+
+        i = block_helper(token, i, ('MEBBE', 'NOWAI', 'OIC'), "MEBBE")
+
     if i < len(token) and token[i] == 'NOWAI':
         i += 1
-
-        while i < len(token) and token[i] not  in ('NOWAI', 'OIC'):
-            if token[i] == 'NEWLINE':
-                i += 1
-            elif token[i] == 'PRINT':
-                i = print_helper(token, i)
-            elif token[i] == 'VAR':
-                if i + 1 < len(token) and token[i + 1] == 'R':
-                    i = assign_helper(token, i)
-                else: 
-                    raise SyntaxError("Invalid statement inside NOWAI")
-            elif token[i] == 'END':
-                raise SyntaxError("O RLY must end with OIC")
-            else: 
-                raise SyntaxError("Invalid statement inside NOWAI")
+        i = block_helper(token, i, ('OIC',), "NO WAI")
 
     if i >= len(token) or token[i] != 'OIC':
         raise SyntaxError("O RLY must end with OIC")
