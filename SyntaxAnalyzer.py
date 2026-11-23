@@ -45,6 +45,7 @@ def syntax(token, lexeme):
 
         if token[i] == 'NEWLINE':
             i += 1
+            continue
 
         elif token[i] == 'WAZZUP':
             i = wazzup_helper(token, i)
@@ -104,6 +105,9 @@ def syntax(token, lexeme):
 
         else:
             raise SyntaxError('Unexpected token: ' + token[i])
+        
+        if i < end_i and token[i] != 'NEWLINE':
+            raise SyntaxError("Each statement mustbe on its own line")
 
     # after KTHXBYE: only newlines and functions are allowed
     i = end_i + 1
@@ -560,6 +564,7 @@ def block_helper(token, lexeme, i, terminators, where):
         t = token[i]
         if t == 'NEWLINE':
             i += 1
+            continue
         elif t == 'PRINT':
             i = print_helper(token, i)
         elif t == 'VAR' and i + 1 < len(token) and token[i + 1] == 'R':
@@ -594,6 +599,9 @@ def block_helper(token, lexeme, i, terminators, where):
             raise SyntaxError(where + " must be closed before KTHXBYE")
         else:
             raise SyntaxError(f"Invalid statement inside {where}")
+
+        if i < len(token) and token[i] != 'NEWLINE':
+            raise SyntaxError("Each statement must be on its own line")
     return i
 
 
