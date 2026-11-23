@@ -48,8 +48,7 @@ def syntax(token, lexeme):
             continue
 
         elif token[i] == 'WAZZUP':
-            raise SyntaxError("Variables must be declared inside WAZZUP")
-
+            i = wazzup_helper(token, i)
         elif token[i] == 'VARDEC':
             i = vardec_helper(token, i)
 
@@ -597,9 +596,16 @@ def block_helper(token, lexeme, i, terminators, where):
             i = loop_helper(token, lexeme, i)
         elif t == 'GIMMEH':
             i = input_helper(token, i)
+        elif t == 'MAEK':
+            i = typecasting_helper(token, i)
+        elif t == 'SMOOSH':
+            i = smoosh_helper(token, i)
+        elif t == 'WTF':
+            i = wtf_helper(token, i)
         elif t == 'END':
             raise SyntaxError(where + " must be closed before KTHXBYE")
         else:
+            #raise SyntaxError(f"Invalid statement inside {where}: token={t}, lexeme={lexeme[i]}")
             raise SyntaxError(f"Invalid statement inside {where}")
 
         if i < len(token) and token[i] != 'NEWLINE':
@@ -708,8 +714,6 @@ def wtf_helper(token, i):
 
 # LOOP HELPER
 # -----------------------------------------------------
-# LOOP HELPER
-# -----------------------------------------------------
 def loop_helper(token, lexeme, i):
     if i + 1 >= len(token) or token[i + 1] != 'VAR':
         raise SyntaxError("IM IN YR must be followed by a loop name")
@@ -733,33 +737,29 @@ def loop_helper(token, lexeme, i):
 
     i += 1
 
-    # optional TIL / WILE keyword (skip it if your lexer emits it)
+        # TIL / WILE and its condition are optional
     if i < len(token) and token[i] in ('TIL', 'WILE'):
         i += 1
 
         if i >= len(token) or token[i] == 'NEWLINE':
             raise SyntaxError("TIL/WILE must be followed by a condition")
 
-    if i >= len(token) or token[i] == 'NEWLINE':
-        raise SyntaxError("Loop must have a condition")
+        elif token[i] in ('BOTHSAEM', 'DIFFRINT'):
+            i = comparison_helper(token, i)
+        elif token[i] in ('BOTHOF', 'EITHER', 'WONOF'):
+            i = boolean_helper(token, i)
+        elif token[i] == 'NOT':
+            i = not_helper(token, i)
+        elif token[i] in ('ALLOF', 'ANYOF'):
+            i = infinite_boolean_helper(token, i)
+        elif token[i] in ('VAR', 'TROOF'):
+            i += 1
+        else:
+            raise SyntaxError("Invalid loop condition")
 
-    elif token[i] in ('BOTHSAEM', 'DIFFRINT'):
-        i = comparison_helper(token, i)
-
-    elif token[i] in ('BOTHOF', 'EITHER', 'WONOF'):
-        i = boolean_helper(token, i)
-
-    elif token[i] == 'NOT':
-        i = not_helper(token, i)
-
-    elif token[i] in ('ALLOF', 'ANYOF'):
-        i = infinite_boolean_helper(token, i)
-
-    elif token[i] in ('VAR', 'TROOF'):
-        i += 1
-
-    else:
-        raise SyntaxError("Invalid loop condition")
+    # header must end here
+    if i < len(token) and token[i] != 'NEWLINE':
+        raise SyntaxError("Loop header must end with a newline")
 
     # loop body
     i = block_helper(token, lexeme, i, ('IMOUTTAYR',), "loop")
