@@ -57,24 +57,22 @@ Linux/macOS:
 
 ```
 File 					|				Role
-=============================================================================================================
-Principal.py 			| Main file. Tkinter window with the editor, tokens, symbol table, and console. Calls
-						| interpreter when Run is pressed
-						|
-Buffer.py 				| Loads the initial 'program.lol' into the editor at startup.
-						|
-LexicalAnalyzer.py 		| Regex-based tokenizer. Turns the program into tokens and lexemes
-						|
-SyntaxAnalyzer.py		| Checks statement order and structure. Raises 'SyntaxErrors'
-						|
-SemanticAnalyzer.py		| Checks that the code makes sense (semantics wise). Raises 'SemanticError'
-						|
-Interpreter.py			| Contains the Parser and Interpreter that runs the program. Raises 'InterpreterError' at runtime.
-						|
-LexemeTable.py			| Maps each token to a type/classification for the token table
-						|
-SymbolTable.py 			| Stores variable names and their values as text.
-						|
+========================================================================================================================================
+Principal.py 	-   Main file. Tkinter window with the editor, tokens, symbol table, and console. Calls interpreter when Run is pressed
+
+Buffer.py - Loads the initial 'program.lol' into the editor at startup.
+
+LexicalAnalyzer.py - Regex-based tokenizer. Turns the program into tokens and lexemes
+						
+SyntaxAnalyzer.py - Checks statement order and structure. Raises 'SyntaxErrors'
+						
+SemanticAnalyzer.py	- Checks that the code makes sense (semantics wise). Raises 'SemanticError'
+						
+Interpreter.py - Contains the Parser and Interpreter that runs the program. Raises 'InterpreterError' at runtime.
+						
+LexemeTable.py - Maps each token to a type/classification for the token table
+						
+SymbolTable.py - Stores variable names and their values as text.
 ```
 
 References:
