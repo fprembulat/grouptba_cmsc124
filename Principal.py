@@ -11,7 +11,7 @@ from Interpreter import Interpreter, InterpreterError
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("LOLCODE Interpreter")
+        self.title("LMAOCODE")
         self.geometry("1000x650")
         self.rowconfigure(1, weight=3)
         self.rowconfigure(2, weight=1)
