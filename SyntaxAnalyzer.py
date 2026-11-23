@@ -14,7 +14,7 @@ def syntax(token, lexeme):
         lexeme.pop(0)
 
     while i < len(token) and token[i] == 'HOWIZI':
-        i = function_helper(token, i)
+        i = function_helper(token, lexeme, i)
 
         while i < len(token) and token[i] == 'NEWLINE':
             i += 1
@@ -54,7 +54,7 @@ def syntax(token, lexeme):
             i = print_helper(token, i)
 
         elif token[i] == 'ORLY':
-            i = orly_helper(token, i)
+            i = orly_helper(token, lexeme, i)
 
         elif token[i] == 'WTF':
             i = wtf_helper(token, i)
@@ -87,7 +87,7 @@ def syntax(token, lexeme):
             i = typecasting_helper(token, i)
 
         elif token[i] == 'HOWIZI':
-            i = function_helper(token, i)
+            i = function_helper(token, lexeme, i)
 
         # input statement
         elif token[i] == 'GIMMEH':
@@ -546,7 +546,7 @@ def wazzup_helper(token, i):
 
 # ORLY HELPER
 # -----------------------------------------------------
-def block_helper(token, i, terminators, where):
+def block_helper(token, lexeme, i, terminators, where):
     while i < len(token) and token[i] not in terminators:
         t = token[i]
         if t == 'NEWLINE':
@@ -555,18 +555,40 @@ def block_helper(token, i, terminators, where):
             i = print_helper(token, i)
         elif t == 'VAR' and i + 1 < len(token) and token[i + 1] == 'R':
             i = assign_helper(token, i)
+        elif t == 'VAR' and i + 1 < len(token) and token[i + 1] == 'ISNOWA':
+            i = isnowa_helper(token, i)
         elif t == 'ORLY':
-            i = orly_helper(token, i)
+            i = orly_helper(token, lexeme, i)
         elif t == 'VARDEC':
             i = vardec_helper(token, i)
+        elif t == 'GTFO':
+            i += 1
+        elif t == 'FOUNDYR':
+            i = foundyr_helper(token, i)
+        elif t in ('BOTHSAEM', 'DIFFRINT'):
+            i = comparison_helper(token, i)
+        elif t in ('SUM', 'DIFF', 'PRODUKT', 'QUOSHUNT', 'MOD', 'BIGGR', 'SMALLR'):
+            i = arithmetic_helper(token, i)
+        elif t in ('BOTHOF', 'EITHER', 'WONOF'):
+            i = boolean_helper(token, i)
+        elif t == 'NOT':
+            i = not_helper(token, i)
+        elif t in ('ALLOF', 'ANYOF'):
+            i = infinite_boolean_helper(token, i)
+        elif t == 'IIZ':
+            i = function_call_helper(token, i)
+        elif t == 'IMINYR':
+            i = loop_helper(token, lexeme, i)
+        elif t == 'GIMMEH':
+            i = input_helper(token, i)
         elif t == 'END':
-            raise SyntaxError("O RLY must end with OIC")
+            raise SyntaxError(where + " must be closed before KTHXBYE")
         else:
             raise SyntaxError(f"Invalid statement inside {where}")
     return i
 
 
-def orly_helper(token, i):
+def orly_helper(token, lexeme, i):
     i += 1
     while i < len(token) and token[i] == 'NEWLINE':
         i += 1
@@ -575,7 +597,7 @@ def orly_helper(token, i):
         raise SyntaxError("O RLY must be followed by YA RLY")
     i += 1
 
-    i = block_helper(token, i, ('MEBBE', 'NOWAI', 'OIC'), "YA RLY")
+    i = block_helper(token, lexeme, i, ('MEBBE', 'NOWAI', 'OIC'), "YA RLY")
 
     while i < len(token) and token[i] == 'MEBBE':
         i += 1
@@ -601,11 +623,11 @@ def orly_helper(token, i):
         else:
             raise SyntaxError("Invalid MEBBE condition")
 
-        i = block_helper(token, i, ('MEBBE', 'NOWAI', 'OIC'), "MEBBE")
+        i = block_helper(token, lexeme, i, ('MEBBE', 'NOWAI', 'OIC'), "MEBBE")
 
     if i < len(token) and token[i] == 'NOWAI':
         i += 1
-        i = block_helper(token, i, ('OIC',), "NO WAI")
+        i = block_helper(token, lexeme, i, ('OIC',), "NO WAI")
 
     if i >= len(token) or token[i] != 'OIC':
         raise SyntaxError("O RLY must end with OIC")
@@ -667,6 +689,8 @@ def wtf_helper(token, i):
 
 # LOOP HELPER
 # -----------------------------------------------------
+# LOOP HELPER
+# -----------------------------------------------------
 def loop_helper(token, lexeme, i):
     if i + 1 >= len(token) or token[i + 1] != 'VAR':
         raise SyntaxError("IM IN YR must be followed by a loop name")
@@ -679,7 +703,7 @@ def loop_helper(token, lexeme, i):
         raise SyntaxError("Loop must contain UPPIN or NERFIN")
 
     i += 1
-    
+
     if i >= len(token) or token[i] != 'YR':
         raise SyntaxError("UPPIN or NERFIN must be followed by YR")
 
@@ -690,17 +714,27 @@ def loop_helper(token, lexeme, i):
 
     i += 1
 
+    # optional TIL / WILE keyword (skip it if your lexer emits it)
+    if i < len(token) and token[i] in ('TIL', 'WILE'):
+        i += 1
+
+        if i >= len(token) or token[i] == 'NEWLINE':
+            raise SyntaxError("TIL/WILE must be followed by a condition")
+
     if i >= len(token) or token[i] == 'NEWLINE':
         raise SyntaxError("Loop must have a condition")
-    
+
     elif token[i] in ('BOTHSAEM', 'DIFFRINT'):
         i = comparison_helper(token, i)
 
     elif token[i] in ('BOTHOF', 'EITHER', 'WONOF'):
         i = boolean_helper(token, i)
-    
+
     elif token[i] == 'NOT':
         i = not_helper(token, i)
+
+    elif token[i] in ('ALLOF', 'ANYOF'):
+        i = infinite_boolean_helper(token, i)
 
     elif token[i] in ('VAR', 'TROOF'):
         i += 1
@@ -708,39 +742,55 @@ def loop_helper(token, lexeme, i):
     else:
         raise SyntaxError("Invalid loop condition")
 
-    if i < len(token) and token[i] == 'NEWLINE':
-        i += 1
+    # loop body
+    i = block_helper(token, lexeme, i, ('IMOUTTAYR',), "loop")
 
-    while i < len(token):
-        if token[i] == 'NEWLINE':
-            i += 1
-        elif token[i] == 'PRINT':
-            i = print_helper(token, i)
-        elif token[i] == 'GIMMEH':
-            i = input_helper(token, i)
-        elif token[i] == 'GTFO':
-            i += 1
-        elif token[i] == 'VAR':
-            if i + 1 < len(token) and token[i + 1] == 'R':
-                i = assign_helper(token, i)
-            else:
-                raise SyntaxError("Invalid statement inside the loop")
-        elif token[i] == 'IMOUTTAYR':
-            if i + 1 >= len(token) or token[i + 1] != 'VAR':
-                raise SyntaxError("IM OUTTA YR must be followed by a loop name")
-            if lexeme[i + 1] != loop_name:
-                raise SyntaxError("Loop closing name does not match")
-            
-            return i + 2
-        elif token[i] == 'END':
-            raise SyntaxError("Loop must end with IM OUTTA YR")
-        else: raise SyntaxError("Invalid statement inside loop")
-    raise SyntaxError("Loop must end with IM OUTTA YR") 
+    if i >= len(token) or token[i] != 'IMOUTTAYR':
+        raise SyntaxError("Loop must end with IM OUTTA YR")
+
+    if i + 1 >= len(token) or token[i + 1] != 'VAR':
+        raise SyntaxError("IM OUTTA YR must be followed by a loop name")
+
+    if lexeme[i + 1] != loop_name:
+        raise SyntaxError("Loop closing name does not match")
+
+    return i + 2
+# -----------------------------------------------------
+# -----------------------------------------------------
+
+# FOUNDYR HELPER
+# -----------------------------------------------------
+def foundyr_helper(token, i):
+    i += 1
+
+    if i >= len(token) or token[i] in ('NEWLINE', 'IFUSAYSO'):
+        raise SyntaxError("FOUND YR must be followed by a value")
+
+    if token[i] in ('SUM', 'DIFF', 'PRODUKT', 'QUOSHUNT', 'MOD', 'BIGGR', 'SMALLR'):
+        return arithmetic_helper(token, i)
+    elif token[i] in ('BOTHSAEM', 'DIFFRINT'):
+        return comparison_helper(token, i)
+    elif token[i] in ('BOTHOF', 'EITHER', 'WONOF'):
+        return boolean_helper(token, i)
+    elif token[i] == 'NOT':
+        return not_helper(token, i)
+    elif token[i] in ('ALLOF', 'ANYOF'):
+        return infinite_boolean_helper(token, i)
+    elif token[i] == 'SMOOSH':
+        return smoosh_helper(token, i)
+    elif token[i] == 'MAEK':
+        return typecasting_helper(token, i)
+    elif token[i] == 'IIZ':
+        return function_call_helper(token, i)
+    elif token[i] in ('NUM', 'NUMBAR', 'YARN', 'TROOF', 'NOOB', 'VAR'):
+        return i + 1
+
+    raise SyntaxError("Invalid return value")
 # -----------------------------------------------------
 
 # FUNCTION HELPER
 # -----------------------------------------------------
-def function_helper(token, i):
+def function_helper(token, lexeme, i):
     if i + 1 >= len(token) or token[i + 1] != 'VAR':
         raise SyntaxError("HOW IZ I must be followed by a function name")
     
@@ -768,55 +818,11 @@ def function_helper(token, i):
     
     i += 1
 
-    while i < len(token) and token[i] != 'IFUSAYSO':
-        if token[i] == 'NEWLINE':
-            i += 1
-        elif token[i] == 'PRINT':
-            i = print_helper(token, i)
+    i = block_helper(token, lexeme, i, ('IFUSAYSO',), "function")
 
-        elif token[i] == 'FOUNDYR':
-            i += 1
-
-            if i >= len(token) or token[i] in ('NEWLINE', 'IFUSAYSO'):
-                raise SyntaxError("FOUND YR must be followed by a value")
-            
-            if token[i] in ('SUM', 'DIFF', 'PRODUKT', 'QUOSHUNT', 'MOD', 'BIGGR', 'SMALLR'):
-                i = arithmetic_helper(token, i)
-            
-            elif token[i] in ('BOTHSAEM', 'DIFFRINT'):
-                i = comparison_helper(token, i)
-            
-            elif token[i] in ('BOTHOF', 'EITHER', 'WONOF'):
-                i = boolean_helper(token, i)
-
-            elif token[i] == 'NOT':
-                i = not_helper(token, i)
-            
-            elif token[i] in ('ALLOF', 'ANYOF'):
-                i = infinite_boolean_helper(token, i)
-
-            elif token[i] == 'SMOOSH':
-                i = smoosh_helper(token, i)
-            
-            elif token[i] == 'MAEK':
-                i = typecasting_helper(token, i)
-            
-            elif token[i] in ('NUM', 'NUMBAR', 'YARN', 'TROOF', 'NOOB', 'VAR'):
-                i += 1
-            else: raise SyntaxError("Invalid return value")
-
-        elif token[i] == 'GTFO':
-            i += 1
-        elif token[i] == 'VAR':
-            if i + 1 < len(token) and token[i + 1] == 'R':
-                i = assign_helper(token, i)
-            else:
-                raise SyntaxError("Invalid statement inside function")
-        else:
-            raise SyntaxError("Invalid statement inside function")
     if i >= len(token) or token[i] != 'IFUSAYSO':
-        raise SyntaxError("Functino must end with IF U SAY SO")
-    
+        raise SyntaxError("Function must end with IF U SAY SO")
+
     return i + 1
 # -----------------------------------------------------
 
