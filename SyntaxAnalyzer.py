@@ -169,6 +169,8 @@ def vardec_helper(token, i):
             i = infinite_boolean_helper(token, i)
         elif i < len(token) and token[i] == 'NOT':
             i = not_helper(token, i)
+        elif i < len(token) and token[i] == 'IIZ':
+            i = function_call_helper(token, i)
         elif i < len(token) and token[i] == 'SMOOSH':
             i = smoosh_helper(token, i)
         elif i < len(token) and token[i] == 'MAEK':
