@@ -221,6 +221,9 @@ def print_helper(token, i):
 
         elif token[i] == 'NOT':
             i = not_helper(token, i)
+        
+        elif token[i] == 'IIZ':
+            i = function_call_helper(token, i)
 
         elif token[i] in ('VAR', 'NUM', 'NUMBAR', 'YARN', 'TROOF', 'NOOB'):
             i += 1
@@ -295,6 +298,9 @@ def assign_helper(token, i):
 # ARITHMETIC OPERAND HELPER
 # -----------------------------------------------------
 def arithmetic_operand_helper(token, i):
+
+    if token[i] == 'IIZ':
+        return function_call_helper(token, i)
     if token[i] in ('SUM', 'DIFF', 'PRODUKT', 'QUOSHUNT', 'MOD', 'BIGGR', 'SMALLR'):
         return arithmetic_helper(token, i)
     
@@ -837,6 +843,8 @@ def function_call_helper(token, i):
                 i = boolean_helper(token, i)
             elif token[i] == 'NOT':
                 i = not_helper(token, i)
+            elif token[i] == 'IIZ':
+                i = function_call_helper(token, i)
             elif token[i] in ('ALLOF', 'ANYOF'):
                 i = infinite_boolean_helper(token, i)
             elif token[i] == 'SMOOSH':
