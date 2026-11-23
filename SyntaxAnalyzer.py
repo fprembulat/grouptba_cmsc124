@@ -696,6 +696,8 @@ def wtf_helper(token, i):
                 i = assign_helper(token, i)
             else:
                 raise SyntaxError("Invalid statement inside WTF")
+        elif token[i] == 'GIMMEH':
+            i = input_helper(token, i)
         elif token[i] == 'GTFO':
             i += 1
         else:
